@@ -1,1 +1,1 @@
-# Insole-Monitor-SoleSense-
+# Insole Monitor (SoleSense)
