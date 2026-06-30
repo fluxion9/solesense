@@ -232,10 +232,10 @@ void takeReadings() {
   for (int i = 0; i < 5; i++) {
     RAW_FSR[i] = ADC_MAX - readADCOversampled(FSR_PINS[i]);
     float resistance = adcToResistance(RAW_FSR[i]);
-    if (i < 4) {
-      GRAMS[i] = resistanceToGrams(resistance, CAL_10KG, CAL_10KG_LEN);
-    } else {
+    if(i == 0) {
       GRAMS[i] = resistanceToGrams(resistance, CAL_20KG, CAL_20KG_LEN);
+    }else {
+      GRAMS[i] = resistanceToGrams(resistance, CAL_10KG, CAL_10KG_LEN);
     }
   }
 
@@ -243,10 +243,10 @@ void takeReadings() {
 
   VBAT = ( (float)vbat_adc * 6.6f ) / 4095.0f;
 
-  // VBAT_PERCENT = ( VBAT - 3.0f ) / ( 4.2f - 3.0f );
-  // VBAT_PERCENT *= 100.0f;
+  VBAT_PERCENT = ( VBAT - 3.0f ) / ( 4.2f - 3.0f );
+  VBAT_PERCENT *= 100.0f;
 
-  VBAT_PERCENT = voltageToSOC(VBAT);
+  // VBAT_PERCENT = voltageToSOC(VBAT);
 }
 
 void serializeData()
