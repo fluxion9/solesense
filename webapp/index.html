@@ -6,7 +6,6 @@
 <title>SoleSense — Insole Monitor</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  /* ── Tokens ──────────────────────────────────────────── */
   :root {
     --bg:        #0d1117;
     --surface:   #161b22;
@@ -14,17 +13,16 @@
     --border:    #30363d;
     --text:      #e6edf3;
     --muted:     #7d8590;
-    --accent:    #3fb950;        /* live/ok green */
+    --accent:    #3fb950;
     --warn:      #d29922;
     --danger:    #f85149;
-    --teal:      #39c5cf;        /* temperature accent */
+    --teal:      #39c5cf;
     --font:      'Inter', sans-serif;
     --mono:      'DM Mono', monospace;
     --radius:    12px;
     --radius-sm: 7px;
   }
 
-  /* ── Reset ───────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 16px; -webkit-text-size-adjust: 100%; }
   body {
@@ -46,11 +44,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px 20px 0;
+    gap: 10px;
   }
   .logo {
     display: flex;
     align-items: center;
     gap: 9px;
+    flex-shrink: 0;
   }
   .logo-icon {
     width: 28px; height: 28px;
@@ -63,7 +63,26 @@
   .logo-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.3px; }
   .logo-text span { color: var(--teal); }
 
-  /* ── BLE connect button ──────────────────────────────── */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  #battBadge {
+    display: none;
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    white-space: nowrap;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 20px;
+    transition: color 0.3s, border-color 0.3s;
+  }
+
   #connectBtn {
     display: flex;
     align-items: center;
@@ -81,7 +100,8 @@
     white-space: nowrap;
   }
   #connectBtn:hover { background: #2a333f; border-color: var(--teal); }
-  #connectBtn.connected { border-color: var(--accent); color: var(--accent); }
+  #connectBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #connectBtn.connected  { border-color: var(--accent); color: var(--accent); }
   #connectBtn.connected .ble-dot { background: var(--accent); }
   #connectBtn.connecting { border-color: var(--warn); color: var(--warn); opacity: 0.85; }
   .ble-dot {
@@ -94,10 +114,10 @@
   .ble-dot.pulse { animation: pulse 1.4s infinite; }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.25; }
+    50%       { opacity: 0.25; }
   }
 
-  /* ── Main card ───────────────────────────────────────── */
+  /* ── Main ────────────────────────────────────────────── */
   main {
     width: 100%;
     max-width: 480px;
@@ -116,18 +136,18 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    transition: background 0.3s, border-color 0.3s;
     border: 1px solid transparent;
+    transition: background 0.3s, border-color 0.3s;
   }
-  #statusBanner.normal   { background: rgba(63,185,80,0.08);  border-color: rgba(63,185,80,0.25);  color: var(--accent); }
-  #statusBanner.warn     { background: rgba(210,153,34,0.08); border-color: rgba(210,153,34,0.25); color: var(--warn); }
-  #statusBanner.danger   { background: rgba(248,81,73,0.08);  border-color: rgba(248,81,73,0.25);  color: var(--danger); }
-  #statusBanner.idle     { background: var(--surface); border-color: var(--border); color: var(--muted); }
+  #statusBanner.normal { background: rgba(63,185,80,0.08);  border-color: rgba(63,185,80,0.25);  color: var(--accent); }
+  #statusBanner.warn   { background: rgba(210,153,34,0.08); border-color: rgba(210,153,34,0.25); color: var(--warn); }
+  #statusBanner.danger { background: rgba(248,81,73,0.08);  border-color: rgba(248,81,73,0.25);  color: var(--danger); }
+  #statusBanner.idle   { background: var(--surface); border-color: var(--border); color: var(--muted); }
   .status-icon { font-size: 1.1rem; flex-shrink: 0; }
   #statusText  { flex: 1; }
   #statusSub   { font-size: 0.75rem; font-weight: 400; opacity: 0.8; margin-top: 1px; }
 
-  /* ── Card shell ──────────────────────────────────────── */
+  /* ── Card ────────────────────────────────────────────── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -158,7 +178,7 @@
   }
   .card-badge.live { background: rgba(63,185,80,0.1); color: var(--accent); }
 
-  /* ── Foot heatmap ────────────────────────────────────── */
+  /* ── Heatmap ─────────────────────────────────────────── */
   .heatmap-wrap {
     padding: 20px 16px 20px;
     display: flex;
@@ -166,14 +186,7 @@
     align-items: flex-start;
     gap: 24px;
   }
-  .foot-svg-container {
-    position: relative;
-    width: 160px;
-    flex-shrink: 0;
-  }
-  foot-shape { display: block; }
-
-  /* Zone labels on the right */
+  .foot-svg-container { position: relative; width: 160px; flex-shrink: 0; }
   .zone-list {
     flex: 1;
     display: flex;
@@ -182,52 +195,18 @@
     gap: 8px;
     padding: 4px 0;
   }
-  .zone-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: default;
-  }
-  .zone-swatch {
-    width: 10px; height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    transition: background 0.5s;
-  }
-  .zone-info { flex: 1; min-width: 0; }
-  .zone-name {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .zone-val {
-    font-size: 0.7rem;
-    font-family: var(--mono);
-    color: var(--muted);
-    margin-top: 1px;
-  }
-  .zone-tag {
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
+  .zone-row { display: flex; align-items: center; gap: 10px; }
+  .zone-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; transition: background 0.5s; }
+  .zone-info   { flex: 1; min-width: 0; }
+  .zone-name   { font-size: 0.75rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zone-val    { font-size: 0.7rem; font-family: var(--mono); color: var(--muted); margin-top: 1px; }
+  .zone-tag    { font-size: 0.65rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
   .zone-tag.ok     { background: rgba(63,185,80,0.12);  color: var(--accent); }
   .zone-tag.warn   { background: rgba(210,153,34,0.15); color: var(--warn); }
   .zone-tag.danger { background: rgba(248,81,73,0.12);  color: var(--danger); }
-
-  /* SVG zone paths */
-  .fsr-zone {
-    transition: fill 0.5s cubic-bezier(.4,0,.2,1), filter 0.5s;
-    cursor: pointer;
-  }
+  .fsr-zone { transition: fill 0.5s cubic-bezier(.4,0,.2,1), filter 0.5s; cursor: pointer; }
   .fsr-zone:hover { filter: brightness(1.25); }
 
-  /* ── Colour scale legend ─────────────────────────────── */
   .legend-wrap {
     padding: 0 16px 16px;
     display: flex;
@@ -235,95 +214,54 @@
     gap: 10px;
   }
   .legend-bar {
-    flex: 1;
-    height: 6px;
-    border-radius: 3px;
+    flex: 1; height: 6px; border-radius: 3px;
     background: linear-gradient(to right, #1e3a5f, #2563eb, #16a34a, #ca8a04, #dc2626);
   }
-  .legend-label {
-    font-size: 0.65rem;
-    font-family: var(--mono);
-    color: var(--muted);
-    white-space: nowrap;
-  }
+  .legend-label { font-size: 0.65rem; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
 
-  /* ── Temperature card ────────────────────────────────── */
-  .temp-body {
-    padding: 18px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
+  /* ── Temperature ─────────────────────────────────────── */
+  .temp-body { padding: 18px 16px; display: flex; align-items: center; gap: 16px; }
   .temp-circle {
-    width: 64px; height: 64px;
-    border-radius: 50%;
+    width: 64px; height: 64px; border-radius: 50%;
     border: 2px solid var(--teal);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
     background: rgba(57,197,207,0.06);
     flex-shrink: 0;
-    transition: border-color 0.4s;
+    transition: border-color 0.4s, background 0.4s;
   }
-  .temp-circle.warn   { border-color: var(--warn); background: rgba(210,153,34,0.07); }
-  .temp-circle.danger { border-color: var(--danger); background: rgba(248,81,73,0.07); }
-  .temp-val {
-    font-family: var(--mono);
-    font-size: 1.15rem;
-    font-weight: 500;
-    color: var(--teal);
-    line-height: 1;
-    transition: color 0.4s;
-  }
-  .temp-circle.warn   .temp-val   { color: var(--warn); }
-  .temp-circle.danger .temp-val   { color: var(--danger); }
-  .temp-unit {
-    font-size: 0.65rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .temp-info { flex: 1; }
+  .temp-circle.warn   { border-color: var(--warn);   background: rgba(210,153,34,0.07); }
+  .temp-circle.danger { border-color: var(--danger);  background: rgba(248,81,73,0.07); }
+  .temp-val  { font-family: var(--mono); font-size: 1.15rem; font-weight: 500; color: var(--teal); line-height: 1; transition: color 0.4s; }
+  .temp-circle.warn   .temp-val  { color: var(--warn); }
+  .temp-circle.danger .temp-val  { color: var(--danger); }
+  .temp-unit { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+  .temp-info  { flex: 1; }
   .temp-label { font-size: 0.9rem; font-weight: 600; }
   .temp-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 
-  /* ── Raw data grid ───────────────────────────────────── */
+  /* ── Raw grid — 6 columns ────────────────────────────── */
   .raw-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0;
   }
-  .raw-cell {
-    padding: 12px 8px;
-    text-align: center;
-    border-right: 1px solid var(--border);
-  }
+  .raw-cell { padding: 12px 6px; text-align: center; border-right: 1px solid var(--border); }
   .raw-cell:last-child { border-right: none; }
-  .raw-cell-label { font-size: 0.65rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-  .raw-cell-val   { font-family: var(--mono); font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: var(--text); }
+  .raw-cell-label { font-size: 0.6rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .raw-cell-val   { font-family: var(--mono); font-size: 0.8rem; font-weight: 500; margin-top: 4px; color: var(--text); }
+  .raw-cell-val.batt-ok     { color: var(--accent); }
+  .raw-cell-val.batt-warn   { color: var(--warn); }
+  .raw-cell-val.batt-danger { color: var(--danger); }
 
-  /* ── Idle / no BLE overlay ───────────────────────────── */
+  /* ── Idle placeholder ────────────────────────────────── */
   .idle-msg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 32px 16px;
-    color: var(--muted);
-    font-size: 0.82rem;
-    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 32px 16px;
+    color: var(--muted); font-size: 0.82rem; text-align: center;
   }
   .idle-msg svg { opacity: 0.3; }
 
-  /* ── Footer ──────────────────────────────────────────── */
-  footer {
-    margin-top: 28px;
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-align: center;
-    padding: 0 16px;
-    line-height: 1.6;
-  }
-
-  /* ── No BLE API warning ──────────────────────────────── */
+  /* ── No BLE warning ──────────────────────────────────── */
   #noBleWarning {
     display: none;
     background: rgba(248,81,73,0.08);
@@ -338,16 +276,26 @@
     width: calc(100% - 32px);
   }
 
+  footer {
+    margin-top: 28px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 0 16px;
+    line-height: 1.6;
+  }
+
   @media (max-width: 360px) {
     .heatmap-wrap { gap: 14px; }
     .foot-svg-container { width: 130px; }
     .zone-name { font-size: 0.7rem; }
+    .raw-grid { grid-template-columns: repeat(3, 1fr); }
+    .raw-cell { border-bottom: 1px solid var(--border); }
   }
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
 <header>
   <div class="logo">
     <div class="logo-icon">
@@ -357,18 +305,21 @@
     </div>
     <span class="logo-text">Sole<span>Sense</span></span>
   </div>
-  <button id="connectBtn" onclick="toggleBLE()">
-    <span class="ble-dot" id="bleDot"></span>
-    <span id="btnLabel">Connect</span>
-  </button>
+  <div class="header-right">
+    <span id="battBadge">🔋 --%</span>
+    <button id="connectBtn" onclick="toggleBLE()">
+      <span class="ble-dot" id="bleDot"></span>
+      <span id="btnLabel">Connect</span>
+    </button>
+  </div>
 </header>
 
 <div id="noBleWarning">
-  ⚠️ Web Bluetooth is not available in this browser. Use Chrome or Edge on Android/desktop, and ensure the page is served over HTTPS or localhost.
+  ⚠️ Web Bluetooth is not available in this browser. Use Chrome or Edge on Android/desktop, served over HTTPS or localhost.
 </div>
 
-<!-- Status banner -->
 <main>
+  <!-- Status banner -->
   <div id="statusBanner" class="idle">
     <span class="status-icon" id="statusIcon">○</span>
     <div>
@@ -384,7 +335,6 @@
       <span class="card-badge" id="hmBadge">— —</span>
     </div>
     <div class="heatmap-wrap" id="heatmapBody">
-      <!-- idle state -->
       <div class="idle-msg" id="hmIdle">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <ellipse cx="12" cy="14" rx="6" ry="8"/>
@@ -393,7 +343,6 @@
         Awaiting sensor data
       </div>
     </div>
-    <!-- Legend -->
     <div class="legend-wrap" id="legendWrap" style="display:none">
       <span class="legend-label">0 g</span>
       <div class="legend-bar"></div>
@@ -419,18 +368,19 @@
     </div>
   </div>
 
-  <!-- Raw values card -->
-  <div class="card" id="rawCard">
+  <!-- Raw readings card — 6 columns (5 FSR + Battery) -->
+  <div class="card">
     <div class="card-header">
       <span class="card-title">Sensor Readings</span>
       <span class="card-badge live" id="rawBadge" style="display:none">LIVE</span>
     </div>
-    <div class="raw-grid" id="rawGrid">
+    <div class="raw-grid">
       <div class="raw-cell"><div class="raw-cell-label">FSR 1</div><div class="raw-cell-val" id="rv0">—</div></div>
       <div class="raw-cell"><div class="raw-cell-label">FSR 2</div><div class="raw-cell-val" id="rv1">—</div></div>
       <div class="raw-cell"><div class="raw-cell-label">FSR 3</div><div class="raw-cell-val" id="rv2">—</div></div>
       <div class="raw-cell"><div class="raw-cell-label">FSR 4</div><div class="raw-cell-val" id="rv3">—</div></div>
       <div class="raw-cell"><div class="raw-cell-label">FSR 5</div><div class="raw-cell-val" id="rv4">—</div></div>
+      <div class="raw-cell"><div class="raw-cell-label">Battery</div><div class="raw-cell-val" id="battVal">—</div></div>
     </div>
   </div>
 </main>
@@ -438,8 +388,8 @@
 <footer>SoleSense v1.0 &nbsp;·&nbsp; Requires Chrome / Edge with Web Bluetooth<br/>Keep device within 5 m for a stable connection</footer>
 
 <script>
-// ── BLE UUIDs (must match firmware) ──────────────────────
-const SERVICE_UUID    = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+// ── BLE UUIDs ─────────────────────────────────────────────
+const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 const CHAR_UUIDS = [
   'aa010000-1fb5-459e-8fcc-c5c9c331914b', // FSR 1
   'aa020000-1fb5-459e-8fcc-c5c9c331914b', // FSR 2
@@ -465,26 +415,22 @@ let fsrValues = [0, 0, 0, 0, 0];
 let tempValue = null;
 let connected = false;
 
-// ── Colour interpolation (blue → green → yellow → red) ───
+// ── Colour scale ──────────────────────────────────────────
 function pressureColor(grams, maxG = 4500) {
   const t = Math.min(grams / maxG, 1);
-  // 4-stop gradient
   const stops = [
-    [0.00, [30,  58, 138]],  // deep blue  (0%)
-    [0.30, [37, 99, 235]],   // blue       (30%)
-    [0.55, [22,163, 74]],    // green      (55%)
-    [0.78, [202,138,  4]],   // amber      (78%)
-    [1.00, [220, 38, 38]],   // red       (100%)
+    [0.00, [30,  58, 138]],
+    [0.30, [37,  99, 235]],
+    [0.55, [22, 163,  74]],
+    [0.78, [202,138,   4]],
+    [1.00, [220,  38,  38]],
   ];
   for (let i = 0; i < stops.length - 1; i++) {
     const [t0, c0] = stops[i];
     const [t1, c1] = stops[i + 1];
     if (t <= t1) {
       const f = (t - t0) / (t1 - t0);
-      const r = Math.round(c0[0] + f * (c1[0] - c0[0]));
-      const g = Math.round(c0[1] + f * (c1[1] - c0[1]));
-      const b = Math.round(c0[2] + f * (c1[2] - c0[2]));
-      return `rgb(${r},${g},${b})`;
+      return `rgb(${Math.round(c0[0]+f*(c1[0]-c0[0]))},${Math.round(c0[1]+f*(c1[1]-c0[1]))},${Math.round(c0[2]+f*(c1[2]-c0[2]))})`;
     }
   }
   return 'rgb(220,38,38)';
@@ -495,19 +441,16 @@ function zoneLevel(grams, zone) {
   if (grams >= zone.threshold.warn)   return 'warn';
   return 'ok';
 }
-
 function zoneTagText(level) {
   return level === 'danger' ? 'High' : level === 'warn' ? 'Elevated' : 'Normal';
 }
 
-// ── Build heatmap DOM (called once data arrives) ──────────
+// ── Build heatmap (once on first data) ───────────────────
 function buildHeatmap() {
   const body = document.getElementById('heatmapBody');
   body.innerHTML = `
-    <!-- Foot SVG -->
     <div class="foot-svg-container">
       <svg id="footSVG" viewBox="0 0 160 320" width="160" xmlns="http://www.w3.org/2000/svg">
-        <!-- Foot outline -->
         <path d="M55,300 C30,300 20,270 22,240 L18,160 C16,130 20,100 30,80
                  C38,60 42,45 44,30 C46,15 52,8 60,8 C70,8 75,16 74,30
                  C73,44 68,54 70,62 C72,68 80,66 86,62 C94,56 96,48 94,36
@@ -518,23 +461,11 @@ function buildHeatmap() {
                  C157,70 150,82 148,92 C144,110 142,130 140,160
                  L138,240 C140,270 130,300 105,300 Z"
               fill="#1f2733" stroke="#30363d" stroke-width="1.5"/>
-
-        <!-- Zone 0: Heel -->
-        <ellipse id="zone0" class="fsr-zone" cx="80" cy="268" rx="32" ry="22" fill="#1e3a5f"/>
-
-        <!-- Zone 1: Lateral midfoot -->
+        <ellipse id="zone0" class="fsr-zone" cx="80"  cy="268" rx="32" ry="22" fill="#1e3a5f"/>
         <ellipse id="zone1" class="fsr-zone" cx="118" cy="195" rx="18" ry="26" fill="#1e3a5f"/>
-
-        <!-- Zone 2: Medial midfoot -->
         <ellipse id="zone2" class="fsr-zone" cx="58"  cy="185" rx="20" ry="28" fill="#1e3a5f"/>
-
-        <!-- Zone 3: Forefoot / ball -->
         <ellipse id="zone3" class="fsr-zone" cx="88"  cy="118" rx="36" ry="22" fill="#1e3a5f"/>
-
-        <!-- Zone 4: Toe area -->
         <ellipse id="zone4" class="fsr-zone" cx="80"  cy="62"  rx="26" ry="28" fill="#1e3a5f"/>
-
-        <!-- Zone labels -->
         <text x="80"  y="272" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">1</text>
         <text x="118" y="199" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">2</text>
         <text x="58"  y="189" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">3</text>
@@ -542,8 +473,6 @@ function buildHeatmap() {
         <text x="80"  y="66"  text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">5</text>
       </svg>
     </div>
-
-    <!-- Zone list -->
     <div class="zone-list" id="zoneList">
       ${ZONES.map((z, i) => `
         <div class="zone-row" id="zr${i}">
@@ -555,112 +484,130 @@ function buildHeatmap() {
           <span class="zone-tag ok" id="zt${i}">—</span>
         </div>
       `).join('')}
-    </div>
-  `;
+    </div>`;
   document.getElementById('legendWrap').style.display = 'flex';
   document.getElementById('hmBadge').textContent = 'LIVE';
   document.getElementById('hmBadge').classList.add('live');
 }
 
-// ── Update heatmap with current fsrValues[] ───────────────
+// ── Update heatmap zones ──────────────────────────────────
 function updateHeatmap() {
   fsrValues.forEach((g, i) => {
     const color = pressureColor(g);
     const level = zoneLevel(g, ZONES[i]);
-    const el = document.getElementById(`zone${i}`);
-    if (el) el.setAttribute('fill', color);
+    const zone  = document.getElementById(`zone${i}`);
+    if (zone) zone.setAttribute('fill', color);
     const sw = document.getElementById(`zsw${i}`);
     if (sw) sw.style.background = color;
     const vEl = document.getElementById(`zv${i}`);
     if (vEl) vEl.textContent = `${Math.round(g)} g`;
     const tEl = document.getElementById(`zt${i}`);
     if (tEl) { tEl.textContent = zoneTagText(level); tEl.className = `zone-tag ${level}`; }
-    // raw grid
     const rv = document.getElementById(`rv${i}`);
     if (rv) rv.textContent = `${Math.round(g)} g`;
   });
 }
 
-// ── Evaluate overall status ───────────────────────────────
+// ── Status banner logic ───────────────────────────────────
 function evaluateStatus() {
-  const maxG   = Math.max(...fsrValues);
-  const zones  = fsrValues.map((g, i) => zoneLevel(g, ZONES[i]));
-  const hasDanger = zones.includes('danger');
-  const hasWarn   = zones.includes('warn');
+  const maxG      = Math.max(...fsrValues);
+  const levels    = fsrValues.map((g, i) => zoneLevel(g, ZONES[i]));
+  const hasDanger = levels.includes('danger');
+  const hasWarn   = levels.includes('warn');
   const highTemp  = tempValue !== null && tempValue >= 37.5;
   const warnTemp  = tempValue !== null && tempValue >= 36.8;
 
-  let level = 'normal', icon = '✓', text = '', sub = '';
+  let cls = 'normal', icon = '✓', text = '', sub = '';
 
   if (hasDanger && highTemp) {
-    level = 'danger'; icon = '⚠';
+    cls = 'danger'; icon = '⚠';
     text = 'High pressure & elevated temperature detected';
     sub  = 'Potential diabetic foot risk — consider redistributing load and consulting a podiatrist';
   } else if (hasDanger) {
-    level = 'danger'; icon = '⚠';
+    cls = 'danger'; icon = '⚠';
     text = 'High foot pressure detected';
     sub  = `Peak load ${Math.round(maxG)} g — prolonged pressure may cause tissue damage`;
   } else if (highTemp) {
-    level = 'danger'; icon = '⚠';
+    cls = 'danger'; icon = '⚠';
     text = 'High foot temperature';
     sub  = `${tempValue.toFixed(1)} °C — elevated temperature may indicate inflammation`;
   } else if (hasWarn && warnTemp) {
-    level = 'warn'; icon = '◐';
+    cls = 'warn'; icon = '◐';
     text = 'Elevated pressure and mild temperature rise';
     sub  = 'Monitor closely — stay within normal activity limits';
   } else if (hasWarn) {
-    level = 'warn'; icon = '◐';
+    cls = 'warn'; icon = '◐';
     text = 'Elevated pressure in one or more zones';
     sub  = 'Consider adjusting footwear or activity level';
   } else if (warnTemp) {
-    level = 'warn'; icon = '◐';
+    cls = 'warn'; icon = '◐';
     text = 'Mild temperature elevation';
     sub  = `${tempValue.toFixed(1)} °C — slightly above baseline, monitor over time`;
   } else {
-    level = 'normal'; icon = '✓';
+    cls = 'normal'; icon = '✓';
     text = 'Normal — all readings within range';
     sub  = 'Pressure distribution and temperature look healthy';
   }
 
   const banner = document.getElementById('statusBanner');
-  banner.className = level;
+  banner.className = cls;
   document.getElementById('statusIcon').textContent = icon;
-  document.getElementById('statusText').textContent  = text;
-  document.getElementById('statusSub').textContent   = sub;
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusSub').textContent  = sub;
 }
 
-// ── Update temperature UI ─────────────────────────────────
+// ── Temperature UI ────────────────────────────────────────
 function updateTemp(val) {
   tempValue = val;
-  document.getElementById('tempVal').textContent = val.toFixed(1);
+  document.getElementById('tempVal').textContent  = val.toFixed(1);
+  document.getElementById('tempBadge').textContent = `${val.toFixed(1)} °C`;
+  document.getElementById('tempBadge').classList.add('live');
   const circle = document.getElementById('tempCircle');
   const label  = document.getElementById('tempLabel');
   const desc   = document.getElementById('tempDesc');
-  const badge  = document.getElementById('tempBadge');
-
-  badge.textContent = `${val.toFixed(1)} °C`;
-  badge.classList.add('live');
-
   if (val >= 37.5) {
-    circle.className = 'temp-circle danger';
+    circle.className  = 'temp-circle danger';
     label.textContent = 'High temperature';
-    desc.textContent  = `${val.toFixed(1)} °C — above safe threshold (37.5 °C). May indicate localised inflammation or infection risk.`;
+    desc.textContent  = `${val.toFixed(1)} °C — above safe threshold. May indicate localised inflammation or infection risk.`;
   } else if (val >= 36.8) {
-    circle.className = 'temp-circle warn';
+    circle.className  = 'temp-circle warn';
     label.textContent = 'Mildly elevated';
     desc.textContent  = `${val.toFixed(1)} °C — slightly above baseline. Monitor for further increase.`;
   } else if (val >= 33.0) {
-    circle.className = 'temp-circle';
+    circle.className  = 'temp-circle';
     label.textContent = 'Normal';
     desc.textContent  = `${val.toFixed(1)} °C — within normal plantar temperature range.`;
   } else {
-    circle.className = 'temp-circle';
+    circle.className  = 'temp-circle';
     label.textContent = 'Cool';
     desc.textContent  = `${val.toFixed(1)} °C — below typical range. Check sensor contact.`;
   }
 }
 
-// ── BLE connection ────────────────────────────────────────
+// ── Battery UI ────────────────────────────────────────────
+function updateBattery(val) {
+  // Header badge
+  const badge = document.getElementById('battBadge');
+  badge.style.display = '';
+  const icon = val > 60 ? '🔋' : val > 20 ? '🪫' : '⚠️';
+  badge.textContent = `${icon} ${val.toFixed(0)}%`;
+  badge.style.color       = val > 60 ? 'var(--accent)' : val > 20 ? 'var(--warn)' : 'var(--danger)';
+  badge.style.borderColor = val > 60 ? 'rgba(63,185,80,0.3)' : val > 20 ? 'rgba(210,153,34,0.3)' : 'rgba(248,81,73,0.3)';
+
+  // Raw grid cell
+  const cell = document.getElementById('battVal');
+  if (cell) {
+    cell.textContent = `${val.toFixed(1)}%`;
+    cell.className   = `raw-cell-val ${val > 60 ? 'batt-ok' : val > 20 ? 'batt-warn' : 'batt-danger'}`;
+  }
+}
+
+// ── Decode BLE value ──────────────────────────────────────
+function decode(event) {
+  return new TextDecoder().decode(event.target.value).trim();
+}
+
+// ── BLE toggle ────────────────────────────────────────────
 async function toggleBLE() {
   if (!navigator.bluetooth) {
     document.getElementById('noBleWarning').style.display = 'block';
@@ -672,68 +619,74 @@ async function toggleBLE() {
 
 function setConnectingState() {
   const btn = document.getElementById('connectBtn');
-  const dot = document.getElementById('bleDot');
   btn.className = 'connecting';
   btn.disabled  = true;
-  dot.classList.add('pulse');
-  document.getElementById('btnLabel').textContent = 'Connecting…';
+  document.getElementById('bleDot').classList.add('pulse');
+  document.getElementById('btnLabel').textContent   = 'Connecting…';
   document.getElementById('statusBanner').className = 'idle';
   document.getElementById('statusText').textContent  = 'Connecting to device…';
   document.getElementById('statusSub').textContent   = 'Make sure the insole is powered on and nearby';
 }
 
-function setConnectedState(name) {
+function setConnectedState() {
   connected = true;
   const btn = document.getElementById('connectBtn');
-  const dot = document.getElementById('bleDot');
   btn.className = 'connected';
   btn.disabled  = false;
-  dot.classList.remove('pulse');
-  document.getElementById('btnLabel').textContent = 'Disconnect';
-  document.getElementById('rawBadge').style.display = '';
+  document.getElementById('bleDot').classList.remove('pulse');
+  document.getElementById('btnLabel').textContent    = 'Disconnect';
+  document.getElementById('rawBadge').style.display  = '';
   buildHeatmap();
 }
 
 function setDisconnectedState() {
   connected = false;
-  fsrValues = [0,0,0,0,0]; tempValue = null;
+  fsrValues = [0,0,0,0,0];
+  tempValue = null;
+
   const btn = document.getElementById('connectBtn');
-  const dot = document.getElementById('bleDot');
   btn.className = '';
   btn.disabled  = false;
-  dot.classList.remove('pulse');
-  document.getElementById('btnLabel').textContent  = 'Connect';
+  document.getElementById('bleDot').classList.remove('pulse');
   document.getElementById('bleDot').style.background = '';
+  document.getElementById('btnLabel').textContent    = 'Connect';
   document.getElementById('rawBadge').style.display  = 'none';
-  document.getElementById('hmBadge').textContent  = '— —';
+  document.getElementById('battBadge').style.display = 'none';
+
+  // Reset heatmap
+  document.getElementById('hmBadge').textContent = '— —';
   document.getElementById('hmBadge').classList.remove('live');
   document.getElementById('legendWrap').style.display = 'none';
   document.getElementById('heatmapBody').innerHTML = `
-    <div class="idle-msg" id="hmIdle">
+    <div class="idle-msg">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <ellipse cx="12" cy="14" rx="6" ry="8"/>
         <path d="M9 6c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
       </svg>
       Awaiting sensor data
     </div>`;
-  document.getElementById('tempVal').textContent  = '--.-';
-  document.getElementById('tempCircle').className = 'temp-circle';
-  document.getElementById('tempLabel').textContent = 'No data';
-  document.getElementById('tempDesc').textContent  = 'Connect device to read foot temperature';
-  document.getElementById('tempBadge').textContent = '— —';
+
+  // Reset temperature
+  document.getElementById('tempVal').textContent   = '--.-';
+  document.getElementById('tempCircle').className  = 'temp-circle';
+  document.getElementById('tempLabel').textContent  = 'No data';
+  document.getElementById('tempDesc').textContent   = 'Connect device to read foot temperature';
+  document.getElementById('tempBadge').textContent  = '— —';
   document.getElementById('tempBadge').classList.remove('live');
+
+  // Reset raw grid
   for (let i = 0; i < 5; i++) {
     const rv = document.getElementById(`rv${i}`);
     if (rv) rv.textContent = '—';
   }
+  const bv = document.getElementById('battVal');
+  if (bv) { bv.textContent = '—'; bv.className = 'raw-cell-val'; }
+
+  // Reset status
   document.getElementById('statusBanner').className = 'idle';
   document.getElementById('statusIcon').textContent  = '○';
   document.getElementById('statusText').textContent  = 'Not connected';
   document.getElementById('statusSub').textContent   = 'Connect your insole device to start monitoring';
-}
-
-function decode(event) {
-  return new TextDecoder().decode(event.target.value).trim();
 }
 
 async function connectBLE() {
@@ -741,8 +694,7 @@ async function connectBLE() {
     setConnectingState();
 
     bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ name: 'Insole Monitor v1.0' }],
-      optionalServices: [SERVICE_UUID]
+      filters: [{ services: [SERVICE_UUID] }]
     });
 
     bleDevice.addEventListener('gattserverdisconnected', () => {
@@ -753,9 +705,9 @@ async function connectBLE() {
     bleServer = await bleDevice.gatt.connect();
     const service = await bleServer.getPrimaryService(SERVICE_UUID);
 
-    // Subscribe FSR 1–5
+    // FSR 1–5
     for (let i = 0; i < 5; i++) {
-      const ch = await service.getCharacteristic(CHAR_UUIDS[i]);
+      const ch  = await service.getCharacteristic(CHAR_UUIDS[i]);
       await ch.startNotifications();
       const idx = i;
       ch.addEventListener('characteristicvaluechanged', (e) => {
@@ -768,7 +720,7 @@ async function connectBLE() {
       });
     }
 
-    // Subscribe Temperature
+    // Temperature
     const tempCh = await service.getCharacteristic(CHAR_UUIDS[5]);
     await tempCh.startNotifications();
     tempCh.addEventListener('characteristicvaluechanged', (e) => {
@@ -776,25 +728,27 @@ async function connectBLE() {
       if (!isNaN(val)) { updateTemp(val); evaluateStatus(); }
     });
 
-    // Battery SOC — read once then subscribe (optional, graceful fail)
+    // Battery SOC
     try {
       const batCh = await service.getCharacteristic(CHAR_UUIDS[6]);
       await batCh.startNotifications();
       batCh.addEventListener('characteristicvaluechanged', (e) => {
-        // Future: display battery somewhere
-        console.log('[BATT]', decode(e), '%');
+        const val = parseFloat(decode(e));
+        if (!isNaN(val)) updateBattery(val);
       });
-    } catch (_) { /* battery char optional */ }
+    } catch (err) {
+      console.warn('[BLE] Battery characteristic not available:', err.message);
+    }
 
-    setConnectedState(bleDevice.name || 'InsoleMonitor');
+    setConnectedState();
 
   } catch (err) {
     console.error('[BLE] Error:', err);
     setDisconnectedState();
     if (err.name !== 'NotFoundError') {
-      document.getElementById('statusText').textContent = 'Connection failed';
-      document.getElementById('statusSub').textContent  = err.message || 'Check device power and proximity';
-      document.getElementById('statusBanner').className = 'warn';
+      document.getElementById('statusText').textContent  = 'Connection failed';
+      document.getElementById('statusSub').textContent   = err.message || 'Check device power and proximity';
+      document.getElementById('statusBanner').className  = 'warn';
     }
   }
 }
@@ -804,12 +758,11 @@ function disconnect() {
   else setDisconnectedState();
 }
 
-// Check BLE availability on load
+// Check BLE on load
 window.addEventListener('load', () => {
   if (!navigator.bluetooth) {
     document.getElementById('noBleWarning').style.display = 'block';
     document.getElementById('connectBtn').disabled = true;
-    document.getElementById('connectBtn').title = 'Web Bluetooth not supported in this browser';
   }
 });
 </script>
