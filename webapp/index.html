@@ -402,11 +402,11 @@ const CHAR_UUIDS = [
 
 // ── Zone metadata ─────────────────────────────────────────
 const ZONES = [
-  { name: 'Heel',            threshold: { warn: 2000, danger: 3500 } },
-  { name: 'Lateral Midfoot', threshold: { warn: 1500, danger: 2800 } },
-  { name: 'Medial Midfoot',  threshold: { warn: 1500, danger: 2800 } },
-  { name: 'Forefoot',        threshold: { warn: 2000, danger: 3500 } },
-  { name: 'Toe',             threshold: { warn: 1200, danger: 2200 } },
+  { name: 'Heel',                   threshold: { warn: 2000, danger: 3500 } },
+  { name: 'Arch',                   threshold: { warn: 1200, danger: 2200 } },
+  { name: 'Metatarsal (Lateral)',   threshold: { warn: 1800, danger: 3200 } },
+  { name: 'Metatarsal (Medial)',    threshold: { warn: 1800, danger: 3200 } },
+  { name: 'Large Toe',              threshold: { warn: 1200, danger: 2200 } },
 ];
 
 // ── State ─────────────────────────────────────────────────
@@ -450,27 +450,78 @@ function buildHeatmap() {
   const body = document.getElementById('heatmapBody');
   body.innerHTML = `
     <div class="foot-svg-container">
-      <svg id="footSVG" viewBox="0 0 160 320" width="160" xmlns="http://www.w3.org/2000/svg">
-        <path d="M55,300 C30,300 20,270 22,240 L18,160 C16,130 20,100 30,80
-                 C38,60 42,45 44,30 C46,15 52,8 60,8 C70,8 75,16 74,30
-                 C73,44 68,54 70,62 C72,68 80,66 86,62 C94,56 96,48 94,36
-                 C92,24 96,14 104,13 C112,12 118,20 116,34 C114,46 108,56 108,64
-                 C108,70 114,68 118,66 C124,62 126,54 124,44 C122,34 126,24 133,23
-                 C140,22 145,30 143,42 C141,54 134,65 132,73 C130,80 136,78 140,76
-                 C145,72 148,64 146,55 C144,46 148,39 154,40 C160,41 163,50 160,60
-                 C157,70 150,82 148,92 C144,110 142,130 140,160
-                 L138,240 C140,270 130,300 105,300 Z"
-              fill="#1f2733" stroke="#30363d" stroke-width="1.5"/>
-        <ellipse id="zone0" class="fsr-zone" cx="80"  cy="268" rx="32" ry="22" fill="#1e3a5f"/>
-        <ellipse id="zone1" class="fsr-zone" cx="118" cy="195" rx="18" ry="26" fill="#1e3a5f"/>
-        <ellipse id="zone2" class="fsr-zone" cx="58"  cy="185" rx="20" ry="28" fill="#1e3a5f"/>
-        <ellipse id="zone3" class="fsr-zone" cx="88"  cy="118" rx="36" ry="22" fill="#1e3a5f"/>
-        <ellipse id="zone4" class="fsr-zone" cx="80"  cy="62"  rx="26" ry="28" fill="#1e3a5f"/>
-        <text x="80"  y="272" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">1</text>
-        <text x="118" y="199" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">2</text>
-        <text x="58"  y="189" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">3</text>
-        <text x="88"  y="122" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">4</text>
-        <text x="80"  y="66"  text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-family="Inter,sans-serif">5</text>
+      <svg id="footSVG" viewBox="0 0 180 360" width="160" xmlns="http://www.w3.org/2000/svg">
+        <!-- Anatomical foot sole outline (right foot, plantar view, toes up) -->
+        <path d="
+          M 95,8
+          C 102,8 108,14 109,24
+          C 110,34 107,42 104,50
+          C 101,58 99,64 100,70
+          C 101,76 106,78 112,76
+          C 119,74 124,67 123,58
+          C 122,48 126,40 133,38
+          C 140,36 146,42 146,51
+          C 146,60 141,68 140,76
+          C 139,82 144,83 149,80
+          C 155,77 158,69 156,60
+          C 154,51 158,44 165,44
+          C 171,44 175,51 173,60
+          C 171,69 165,78 161,86
+          C 156,96 150,108 146,124
+          C 140,148 136,176 136,206
+          C 136,232 140,254 142,272
+          C 145,294 142,316 128,332
+          C 116,346 98,352 80,352
+          C 60,352 42,346 30,332
+          C 16,316 13,294 16,272
+          C 18,254 22,232 22,206
+          C 22,176 18,148 12,124
+          C 8,108 2,96 -3,86
+          C -7,78 -13,69 -15,60
+          C -17,51 -13,44 -7,44
+          C 0,44 4,51 2,60
+          C 0,69 -3,77 3,80
+          C 8,83 13,82 12,76
+          C 11,68 6,60 6,51
+          C 6,42 12,36 19,38
+          C 26,40 30,48 29,58
+          C 28,67 33,74 40,76
+          C 46,78 51,76 52,70
+          C 53,64 51,58 48,50
+          C 45,42 42,34 43,24
+          C 44,14 50,8 57,8
+          C 64,6 73,5 80,5
+          C 87,5 90,6 95,8
+          Z"
+          fill="#1f2733" stroke="#30363d" stroke-width="1.5" transform="translate(14,0)"/>
+
+        <!-- Zone 0: Heel -->
+        <ellipse id="zone0" class="fsr-zone" cx="94" cy="312" rx="34" ry="32" fill="#1e3a5f"/>
+
+        <!-- Zone 1: Arch (medial longitudinal arch, slightly inset) -->
+        <ellipse id="zone1" class="fsr-zone" cx="84" cy="225" rx="22" ry="40" fill="#1e3a5f"/>
+
+        <!-- Zone 2: Metatarsal head — lateral (pinky-side, outer ball of foot) -->
+        <ellipse id="zone2" class="fsr-zone" cx="126" cy="148" rx="20" ry="22" fill="#1e3a5f"/>
+
+        <!-- Zone 3: Metatarsal head — medial (big-toe-side, inner ball of foot) -->
+        <ellipse id="zone3" class="fsr-zone" cx="74" cy="138" rx="22" ry="24" fill="#1e3a5f"/>
+
+        <!-- Zone 4: Large toe (hallux) -->
+        <ellipse id="zone4" class="fsr-zone" cx="100" cy="42" rx="24" ry="30" fill="#1e3a5f"/>
+
+        <!-- Zone labels -->
+        <text x="94"  y="316" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Inter,sans-serif">1</text>
+        <text x="84"  y="229" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Inter,sans-serif">2</text>
+        <text x="126" y="152" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Inter,sans-serif">3</text>
+        <text x="74"  y="142" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Inter,sans-serif">4</text>
+        <text x="100" y="46"  text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Inter,sans-serif">5</text>
+
+        <!-- Small toe bumps (decorative, non-interactive) for visual realism -->
+        <ellipse cx="58"  cy="60" rx="9"  ry="13" fill="#1f2733" stroke="#30363d" stroke-width="1.2" transform="translate(14,0)"/>
+        <ellipse cx="42"  cy="68" rx="8"  ry="11" fill="#1f2733" stroke="#30363d" stroke-width="1.2" transform="translate(14,0)"/>
+        <ellipse cx="28"  cy="78" rx="7"  ry="10" fill="#1f2733" stroke="#30363d" stroke-width="1.2" transform="translate(14,0)"/>
+        <ellipse cx="16"  cy="90" rx="6"  ry="8"  fill="#1f2733" stroke="#30363d" stroke-width="1.2" transform="translate(14,0)"/>
       </svg>
     </div>
     <div class="zone-list" id="zoneList">
