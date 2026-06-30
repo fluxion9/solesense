@@ -36,7 +36,6 @@
     padding: 0 0 48px;
   }
 
-  /* ── Top bar ─────────────────────────────────────────── */
   header {
     width: 100%;
     max-width: 480px;
@@ -46,12 +45,7 @@
     padding: 20px 20px 0;
     gap: 10px;
   }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    flex-shrink: 0;
-  }
+  .logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
   .logo-icon {
     width: 28px; height: 28px;
     background: linear-gradient(135deg, var(--teal), var(--accent));
@@ -63,12 +57,7 @@
   .logo-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.3px; }
   .logo-text span { color: var(--teal); }
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
   #battBadge {
     display: none;
@@ -117,7 +106,6 @@
     50%       { opacity: 0.25; }
   }
 
-  /* ── Main ────────────────────────────────────────────── */
   main {
     width: 100%;
     max-width: 480px;
@@ -127,7 +115,6 @@
     gap: 14px;
   }
 
-  /* ── Status banner ───────────────────────────────────── */
   #statusBanner {
     border-radius: var(--radius);
     padding: 13px 16px;
@@ -147,7 +134,6 @@
   #statusText  { flex: 1; }
   #statusSub   { font-size: 0.75rem; font-weight: 400; opacity: 0.8; margin-top: 1px; }
 
-  /* ── Card ────────────────────────────────────────────── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -178,48 +164,49 @@
   }
   .card-badge.live { background: rgba(63,185,80,0.1); color: var(--accent); }
 
-  /* ── Heatmap ─────────────────────────────────────────── */
+  /* ── Heatmap layout — SVG shrinks first, zone list keeps room ─── */
   .heatmap-wrap {
-    padding: 20px 16px 20px;
+    padding: 20px 14px 20px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 24px;
+    gap: 12px;
   }
-  .foot-svg-container { position: relative; width: 160px; flex-shrink: 0; }
+  .foot-svg-container {
+    position: relative;
+    width: 120px;
+    flex: 0 0 120px;
+  }
+  .foot-svg-container svg { display: block; width: 100%; height: auto; background: transparent; }
+
   .zone-list {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 8px;
+    gap: 9px;
     padding: 4px 0;
   }
-  .zone-row { display: flex; align-items: center; gap: 10px; }
-  .zone-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; transition: background 0.5s; }
+  .zone-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .zone-swatch { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; transition: background 0.5s; }
   .zone-info   { flex: 1; min-width: 0; }
-  .zone-name   { font-size: 0.75rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .zone-val    { font-size: 0.7rem; font-family: var(--mono); color: var(--muted); margin-top: 1px; }
-  .zone-tag    { font-size: 0.65rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+  .zone-name   { font-size: 0.7rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zone-val    { font-size: 0.64rem; font-family: var(--mono); color: var(--muted); margin-top: 1px; }
+  .zone-tag    { font-size: 0.6rem; font-weight: 600; padding: 1px 5px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
   .zone-tag.ok     { background: rgba(63,185,80,0.12);  color: var(--accent); }
   .zone-tag.warn   { background: rgba(210,153,34,0.15); color: var(--warn); }
   .zone-tag.danger { background: rgba(248,81,73,0.12);  color: var(--danger); }
   .fsr-zone { transition: fill 0.5s cubic-bezier(.4,0,.2,1), filter 0.5s; cursor: pointer; }
   .fsr-zone:hover { filter: brightness(1.25); }
 
-  .legend-wrap {
-    padding: 0 16px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .legend-wrap { padding: 0 16px 16px; display: flex; align-items: center; gap: 10px; }
   .legend-bar {
     flex: 1; height: 6px; border-radius: 3px;
     background: linear-gradient(to right, #1e3a5f, #2563eb, #16a34a, #ca8a04, #dc2626);
   }
   .legend-label { font-size: 0.65rem; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
 
-  /* ── Temperature ─────────────────────────────────────── */
   .temp-body { padding: 18px 16px; display: flex; align-items: center; gap: 16px; }
   .temp-circle {
     width: 64px; height: 64px; border-radius: 50%;
@@ -239,12 +226,7 @@
   .temp-label { font-size: 0.9rem; font-weight: 600; }
   .temp-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 
-  /* ── Raw grid — 6 columns ────────────────────────────── */
-  .raw-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0;
-  }
+  .raw-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; }
   .raw-cell { padding: 12px 6px; text-align: center; border-right: 1px solid var(--border); }
   .raw-cell:last-child { border-right: none; }
   .raw-cell-label { font-size: 0.6rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -253,7 +235,6 @@
   .raw-cell-val.batt-warn   { color: var(--warn); }
   .raw-cell-val.batt-danger { color: var(--danger); }
 
-  /* ── Idle placeholder ────────────────────────────────── */
   .idle-msg {
     display: flex; flex-direction: column; align-items: center;
     gap: 8px; padding: 32px 16px;
@@ -261,7 +242,6 @@
   }
   .idle-msg svg { opacity: 0.3; }
 
-  /* ── No BLE warning ──────────────────────────────────── */
   #noBleWarning {
     display: none;
     background: rgba(248,81,73,0.08);
@@ -286,9 +266,10 @@
   }
 
   @media (max-width: 360px) {
-    .heatmap-wrap { gap: 14px; }
-    .foot-svg-container { width: 130px; }
-    .zone-name { font-size: 0.7rem; }
+    .heatmap-wrap { gap: 8px; padding: 16px 10px; }
+    .foot-svg-container { width: 96px; flex: 0 0 96px; }
+    .zone-name { font-size: 0.65rem; }
+    .zone-val  { font-size: 0.6rem; }
     .raw-grid { grid-template-columns: repeat(3, 1fr); }
     .raw-cell { border-bottom: 1px solid var(--border); }
   }
@@ -319,7 +300,6 @@
 </div>
 
 <main>
-  <!-- Status banner -->
   <div id="statusBanner" class="idle">
     <span class="status-icon" id="statusIcon">○</span>
     <div>
@@ -328,7 +308,6 @@
     </div>
   </div>
 
-  <!-- Heatmap card -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Plantar Pressure Map</span>
@@ -350,7 +329,6 @@
     </div>
   </div>
 
-  <!-- Temperature card -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Foot Temperature</span>
@@ -368,7 +346,6 @@
     </div>
   </div>
 
-  <!-- Raw readings card — 6 columns (5 FSR + Battery) -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Sensor Readings</span>
@@ -388,19 +365,17 @@
 <footer>SoleSense v1.0 &nbsp;·&nbsp; Requires Chrome / Edge with Web Bluetooth<br/>Keep device within 5 m for a stable connection</footer>
 
 <script>
-// ── BLE UUIDs ─────────────────────────────────────────────
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 const CHAR_UUIDS = [
-  'aa010000-1fb5-459e-8fcc-c5c9c331914b', // FSR 1
-  'aa020000-1fb5-459e-8fcc-c5c9c331914b', // FSR 2
-  'aa030000-1fb5-459e-8fcc-c5c9c331914b', // FSR 3
-  'aa040000-1fb5-459e-8fcc-c5c9c331914b', // FSR 4
-  'aa050000-1fb5-459e-8fcc-c5c9c331914b', // FSR 5
-  'aa060000-1fb5-459e-8fcc-c5c9c331914b', // Temperature
-  'aa070000-1fb5-459e-8fcc-c5c9c331914b', // Battery SOC
+  'aa010000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa020000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa030000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa040000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa050000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa060000-1fb5-459e-8fcc-c5c9c331914b',
+  'aa070000-1fb5-459e-8fcc-c5c9c331914b',
 ];
 
-// ── Zone metadata ─────────────────────────────────────────
 const ZONES = [
   { name: 'Heel',                   threshold: { warn: 2000, danger: 3500 } },
   { name: 'Arch',                   threshold: { warn: 1200, danger: 2200 } },
@@ -409,13 +384,11 @@ const ZONES = [
   { name: 'Large Toe',              threshold: { warn: 1200, danger: 2200 } },
 ];
 
-// ── State ─────────────────────────────────────────────────
 let bleDevice = null, bleServer = null;
 let fsrValues = [0, 0, 0, 0, 0];
 let tempValue = null;
 let connected = false;
 
-// ── Colour scale ──────────────────────────────────────────
 function pressureColor(grams, maxG = 4500) {
   const t = Math.min(grams / maxG, 1);
   const stops = [
@@ -445,21 +418,13 @@ function zoneTagText(level) {
   return level === 'danger' ? 'High' : level === 'warn' ? 'Elevated' : 'Normal';
 }
 
-// ── Build heatmap (once on first data) ───────────────────
 function buildHeatmap() {
   const body = document.getElementById('heatmapBody');
   body.innerHTML = `
     <div class="foot-svg-container">
-      <svg id="footSVG" viewBox="0 0 240 400" width="180" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="blur-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
+      <svg id="footSVG" viewBox="0 0 240 400" xmlns="http://www.w3.org/2000/svg">
         <path d="
-          M 100,55 
+          M 100,55
           C 115,55 130,58 142,65
           C 152,70 162,80 164,95
           C 166,110 158,125 152,138
@@ -471,7 +436,7 @@ function buildHeatmap() {
           C 48,328 50,300 54,272
           C 58,245 65,215 64,185
           C 63,155 52,130 54,105
-          C 56,80 75,55 100,55 
+          C 56,80 75,55 100,55
           Z"
           fill="#1f2733" stroke="#30363d" stroke-width="1.5" stroke-linejoin="round"/>
 
@@ -481,11 +446,11 @@ function buildHeatmap() {
         <path d="M 149,65 C 146,63 146,56 148,48 C 150,40 157,39 160,45 C 163,51 160,60 157,64 C 155,66 151,67 149,65 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
         <path d="M 165,77 C 162,75 162,70 164,63 C 166,56 172,56 175,61 C 178,66 175,74 172,77 C 170,79 167,79 165,77 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
 
-        <path id="zone0" class="fsr-zone" filter="url(#blur-glow)" d="M 105,295 C 130,295 138,315 135,335 C 132,355 120,365 105,365 C 90,365 78,355 75,335 C 72,315 80,295 105,295 Z" fill="#1e3a5f" opacity="0.85"/>
-        <path id="zone1" class="fsr-zone" filter="url(#blur-glow)" d="M 100,180 C 115,180 120,205 115,235 C 110,265 100,275 90,275 C 80,275 80,250 85,225 C 90,200 85,180 100,180 Z" fill="#1e3a5f" opacity="0.85"/>
-        <path id="zone2" class="fsr-zone" filter="url(#blur-glow)" d="M 135,105 C 150,110 155,125 148,140 C 141,155 125,155 118,145 C 111,135 120,100 135,105 Z" fill="#1e3a5f" opacity="0.85"/>
-        <path id="zone3" class="fsr-zone" filter="url(#blur-glow)" d="M 90,95 C 110,95 118,110 115,125 C 112,140 95,150 80,140 C 65,130 70,95 90,95 Z" fill="#1e3a5f" opacity="0.85"/>
-        <path id="zone4" class="fsr-zone" filter="url(#blur-glow)" d="M 86,42 C 94,42 98,32 94,20 C 90,8 82,10 78,18 C 74,26 78,42 86,42 Z" fill="#1e3a5f" opacity="0.85"/>
+        <path id="zone0" class="fsr-zone" d="M 105,295 C 130,295 138,315 135,335 C 132,355 120,365 105,365 C 90,365 78,355 75,335 C 72,315 80,295 105,295 Z" fill="#1e3a5f"/>
+        <path id="zone1" class="fsr-zone" d="M 100,180 C 115,180 120,205 115,235 C 110,265 100,275 90,275 C 80,275 80,250 85,225 C 90,200 85,180 100,180 Z" fill="#1e3a5f"/>
+        <path id="zone2" class="fsr-zone" d="M 135,105 C 150,110 155,125 148,140 C 141,155 125,155 118,145 C 111,135 120,100 135,105 Z" fill="#1e3a5f"/>
+        <path id="zone3" class="fsr-zone" d="M 90,95 C 110,95 118,110 115,125 C 112,140 95,150 80,140 C 65,130 70,95 90,95 Z" fill="#1e3a5f"/>
+        <path id="zone4" class="fsr-zone" d="M 86,42 C 94,42 98,32 94,20 C 90,8 82,10 78,18 C 74,26 78,42 86,42 Z" fill="#1e3a5f"/>
 
         <text x="105" y="338" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">1</text>
         <text x="102" y="232" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">2</text>
@@ -511,7 +476,6 @@ function buildHeatmap() {
   document.getElementById('hmBadge').classList.add('live');
 }
 
-// ── Update heatmap zones ──────────────────────────────────
 function updateHeatmap() {
   fsrValues.forEach((g, i) => {
     const color = pressureColor(g);
@@ -529,7 +493,6 @@ function updateHeatmap() {
   });
 }
 
-// ── Status banner logic ───────────────────────────────────
 function evaluateStatus() {
   const maxG      = Math.max(...fsrValues);
   const levels    = fsrValues.map((g, i) => zoneLevel(g, ZONES[i]));
@@ -577,7 +540,6 @@ function evaluateStatus() {
   document.getElementById('statusSub').textContent  = sub;
 }
 
-// ── Temperature UI ────────────────────────────────────────
 function updateTemp(val) {
   tempValue = val;
   document.getElementById('tempVal').textContent  = val.toFixed(1);
@@ -605,9 +567,7 @@ function updateTemp(val) {
   }
 }
 
-// ── Battery UI ────────────────────────────────────────────
 function updateBattery(val) {
-  // Header badge
   const badge = document.getElementById('battBadge');
   badge.style.display = '';
   const icon = val > 60 ? '🔋' : val > 20 ? '🪫' : '⚠️';
@@ -615,7 +575,6 @@ function updateBattery(val) {
   badge.style.color       = val > 60 ? 'var(--accent)' : val > 20 ? 'var(--warn)' : 'var(--danger)';
   badge.style.borderColor = val > 60 ? 'rgba(63,185,80,0.3)' : val > 20 ? 'rgba(210,153,34,0.3)' : 'rgba(248,81,73,0.3)';
 
-  // Raw grid cell
   const cell = document.getElementById('battVal');
   if (cell) {
     cell.textContent = `${val.toFixed(1)}%`;
@@ -623,12 +582,10 @@ function updateBattery(val) {
   }
 }
 
-// ── Decode BLE value ──────────────────────────────────────
 function decode(event) {
   return new TextDecoder().decode(event.target.value).trim();
 }
 
-// ── BLE toggle ────────────────────────────────────────────
 async function toggleBLE() {
   if (!navigator.bluetooth) {
     document.getElementById('noBleWarning').style.display = 'block';
@@ -674,7 +631,6 @@ function setDisconnectedState() {
   document.getElementById('rawBadge').style.display  = 'none';
   document.getElementById('battBadge').style.display = 'none';
 
-  // Reset heatmap
   document.getElementById('hmBadge').textContent = '— —';
   document.getElementById('hmBadge').classList.remove('live');
   document.getElementById('legendWrap').style.display = 'none';
@@ -687,7 +643,6 @@ function setDisconnectedState() {
       Awaiting sensor data
     </div>`;
 
-  // Reset temperature
   document.getElementById('tempVal').textContent   = '--.-';
   document.getElementById('tempCircle').className  = 'temp-circle';
   document.getElementById('tempLabel').textContent  = 'No data';
@@ -695,7 +650,6 @@ function setDisconnectedState() {
   document.getElementById('tempBadge').textContent  = '— —';
   document.getElementById('tempBadge').classList.remove('live');
 
-  // Reset raw grid
   for (let i = 0; i < 5; i++) {
     const rv = document.getElementById(`rv${i}`);
     if (rv) rv.textContent = '—';
@@ -703,7 +657,6 @@ function setDisconnectedState() {
   const bv = document.getElementById('battVal');
   if (bv) { bv.textContent = '—'; bv.className = 'raw-cell-val'; }
 
-  // Reset status
   document.getElementById('statusBanner').className = 'idle';
   document.getElementById('statusIcon').textContent  = '○';
   document.getElementById('statusText').textContent  = 'Not connected';
@@ -726,7 +679,6 @@ async function connectBLE() {
     bleServer = await bleDevice.gatt.connect();
     const service = await bleServer.getPrimaryService(SERVICE_UUID);
 
-    // FSR 1–5
     for (let i = 0; i < 5; i++) {
       const ch  = await service.getCharacteristic(CHAR_UUIDS[i]);
       await ch.startNotifications();
@@ -741,7 +693,6 @@ async function connectBLE() {
       });
     }
 
-    // Temperature
     const tempCh = await service.getCharacteristic(CHAR_UUIDS[5]);
     await tempCh.startNotifications();
     tempCh.addEventListener('characteristicvaluechanged', (e) => {
@@ -749,7 +700,6 @@ async function connectBLE() {
       if (!isNaN(val)) { updateTemp(val); evaluateStatus(); }
     });
 
-    // Battery SOC
     try {
       const batCh = await service.getCharacteristic(CHAR_UUIDS[6]);
       await batCh.startNotifications();
@@ -779,7 +729,6 @@ function disconnect() {
   else setDisconnectedState();
 }
 
-// Check BLE on load
 window.addEventListener('load', () => {
   if (!navigator.bluetooth) {
     document.getElementById('noBleWarning').style.display = 'block';
