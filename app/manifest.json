@@ -2,7 +2,7 @@
   "name": "SoleSense — Insole Monitor",
   "short_name": "SoleSense",
   "description": "Real-time plantar pressure and temperature monitoring for diabetic foot care",
-  "start_url": "/index.html",
+  "start_url": "/solesense/app",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0d1117",
