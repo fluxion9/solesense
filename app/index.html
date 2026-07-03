@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SoleSense — Insole Monitor</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#0d1117"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="SoleSense"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -733,6 +740,13 @@ window.addEventListener('load', () => {
   if (!navigator.bluetooth) {
     document.getElementById('noBleWarning').style.display = 'block';
     document.getElementById('connectBtn').disabled = true;
+  }
+
+  // Register service worker for PWA installability
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[SW] Registered, scope:', reg.scope))
+      .catch(err => console.warn('[SW] Registration failed:', err));
   }
 });
 </script>
