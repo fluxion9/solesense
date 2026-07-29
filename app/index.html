@@ -11,7 +11,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SoleSense"/>
 <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
     --bg:        #0d1117;
@@ -24,8 +23,8 @@
     --warn:      #d29922;
     --danger:    #f85149;
     --teal:      #39c5cf;
-    --font:      'Inter', sans-serif;
-    --mono:      'DM Mono', monospace;
+    --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono:      'SF Mono', SFMono-Regular, ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
     --radius:    12px;
     --radius-sm: 7px;
   }
@@ -396,6 +395,14 @@ let fsrValues = [0, 0, 0, 0, 0];
 let tempValue = null;
 let connected = false;
 
+// ── Sustained pressure alert state ───────────────────────
+const ALERT_DURATION_MS   = 30000;  // fire after 30s of sustained danger
+const ALERT_COOLDOWN_MS   = 60000;  // silence same zone for 60s after alert
+let   zoneHighSince       = [0, 0, 0, 0, 0];  // when zone first went danger
+let   zoneAlertFiredAt    = [0, 0, 0, 0, 0];  // when last alert fired per zone
+let   audioCtx            = null;
+let   notifPermission     = 'default';
+
 function pressureColor(grams, maxG = 4500) {
   const t = Math.min(grams / maxG, 1);
   const stops = [
@@ -423,6 +430,133 @@ function zoneLevel(grams, zone) {
 }
 function zoneTagText(level) {
   return level === 'danger' ? 'High' : level === 'warn' ? 'Elevated' : 'Normal';
+}
+
+// ── Web Audio beep (no external files needed) ─────────────
+function playBeep() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+
+    // Three short beeps: 880Hz → 660Hz → 880Hz
+    const beeps = [
+      { freq: 880, start: 0,    dur: 0.12 },
+      { freq: 660, start: 0.18, dur: 0.12 },
+      { freq: 880, start: 0.36, dur: 0.18 },
+    ];
+
+    beeps.forEach(({ freq, start, dur }) => {
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type      = 'sine';
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.6, now + start + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + start + dur);
+      osc.start(now + start);
+      osc.stop(now + start + dur + 0.05);
+    });
+  } catch (e) {
+    console.warn('[BEEP] Audio error:', e);
+  }
+}
+
+// ── Push / in-app notification ────────────────────────────
+function fireAlert(zoneIndex) {
+  const zoneName = ZONES[zoneIndex].name;
+  const title    = '⚠️ Sustained High Pressure';
+  const body     = `${zoneName} has been under high pressure for over 30 seconds. Reposition your foot.`;
+
+  // In-app toast (always works)
+  showToast(title, body);
+
+  // Web Push notification (if permission granted and page not focused)
+  if (notifPermission === 'granted' && document.hidden) {
+    try {
+      new Notification(title, {
+        body,
+        icon:    'icons/icon-192.png',
+        badge:   'icons/icon-192.png',
+        vibrate: [200, 100, 200],
+        tag:     `zone-${zoneIndex}`,      // replaces previous notif for same zone
+      });
+    } catch (e) {
+      console.warn('[NOTIF]', e);
+    }
+  }
+
+  playBeep();
+}
+
+// ── In-app toast banner ───────────────────────────────────
+function showToast(title, body) {
+  let toast = document.getElementById('alertToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'alertToast';
+    toast.style.cssText = `
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1f2733; border: 1px solid rgba(248,81,73,0.5);
+      color: #e6edf3; border-radius: 12px; padding: 14px 18px;
+      max-width: 340px; width: calc(100% - 32px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      animation: slideUp 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  toast.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <span style="font-size:1.2rem;flex-shrink:0;">⚠️</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.85rem;color:#f85149;">${title}</div>
+        <div style="font-size:0.78rem;color:#7d8590;margin-top:3px;line-height:1.4;">${body}</div>
+      </div>
+      <button onclick="document.getElementById('alertToast').style.display='none'"
+        style="background:none;border:none;color:#7d8590;cursor:pointer;font-size:1rem;flex-shrink:0;padding:0;">✕</button>
+    </div>`;
+  toast.style.display = 'block';
+
+  // Auto-dismiss after 8 seconds
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 8000);
+}
+
+// ── Check each zone for sustained danger ──────────────────
+function checkSustainedPressure() {
+  const now = Date.now();
+
+  fsrValues.forEach((g, i) => {
+    const level = zoneLevel(g, ZONES[i]);
+
+    if (level === 'danger') {
+      // Zone is currently in danger
+      if (zoneHighSince[i] === 0) {
+        zoneHighSince[i] = now;          // start the clock
+      } else {
+        const elapsed   = now - zoneHighSince[i];
+        const cooldown  = now - zoneAlertFiredAt[i];
+        if (elapsed >= ALERT_DURATION_MS && cooldown >= ALERT_COOLDOWN_MS) {
+          zoneAlertFiredAt[i] = now;     // mark alert fired
+          fireAlert(i);
+        }
+      }
+    } else {
+      zoneHighSince[i] = 0;             // reset clock — pressure dropped
+    }
+  });
 }
 
 function buildHeatmap() {
@@ -498,6 +632,7 @@ function updateHeatmap() {
     const rv = document.getElementById(`rv${i}`);
     if (rv) rv.textContent = `${Math.round(g)} g`;
   });
+  checkSustainedPressure();
 }
 
 function evaluateStatus() {
@@ -622,12 +757,24 @@ function setConnectedState() {
   document.getElementById('btnLabel').textContent    = 'Disconnect';
   document.getElementById('rawBadge').style.display  = '';
   buildHeatmap();
+
+  // Request notification permission (needs user gesture — Connect button qualifies)
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      notifPermission = p;
+      console.log('[NOTIF] Permission:', p);
+    });
+  } else if ('Notification' in window) {
+    notifPermission = Notification.permission;
+  }
 }
 
 function setDisconnectedState() {
   connected = false;
   fsrValues = [0,0,0,0,0];
   tempValue = null;
+  zoneHighSince    = [0,0,0,0,0];
+  zoneAlertFiredAt = [0,0,0,0,0];
 
   const btn = document.getElementById('connectBtn');
   btn.className = '';
