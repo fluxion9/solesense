@@ -47,7 +47,7 @@
 
 SoleSense is a smart insole monitoring system intended for patients with **diabetes mellitus** and clinicians monitoring diabetic foot syndrome. Five Force Sensitive Resistors (FSRs) and a DS18B20 temperature sensor in one insole connect to an ESP32, which sends readings once per second to a Progressive Web App over Bluetooth Low Energy (BLE).
 
-The app flags high load in any zone and elevated foot temperature, and alerts the wearer when a zone stays at danger level for 30 seconds. Data is shown live only: nothing is stored or sent anywhere other than the connected browser.
+The app flags high load in any zone and elevated foot temperature, and alerts the wearer when a zone stays at danger level for 30 seconds. Users can enter their body weight to personalise their limits. The weight and session summaries stay in that browser's local storage, and nothing is sent to a server.
 
 ---
 
@@ -58,9 +58,9 @@ SoleSense is a prototype and is **not a validated medical device**.
 | Area | Status |
 |------|--------|
 | Firmware | Single sketch. Does not build as committed on ESP32 Arduino core 3.3.12 — see [Getting Started](#getting-started) |
-| Web app | Single-page PWA, no build step and no dependencies |
+| Web app | Single-page PWA, no build step and no dependencies. Tested in Chromium against a simulated insole, not yet with real hardware |
 | Insoles | One foot only |
-| Data history | None — live view only |
+| Data history | Summaries of the last 20 sessions, stored in the browser |
 | Hardware design files | Not yet in this repository |
 | Automated tests | None |
 
@@ -71,7 +71,7 @@ SoleSense is a prototype and is **not a validated medical device**.
 | # | Objective | Current state |
 |---|-----------|---------------|
 | 1 | Measure and analyze plantar pressure distribution across five anatomical foot zones | Implemented as force (grams) per zone |
-| 2 | Monitor basic gait parameters including pressure symmetry and zone loading patterns | Not implemented — live per-zone load only |
+| 2 | Monitor basic gait parameters including pressure symmetry and zone loading patterns | Zone loading only. Gait analysis needs a faster sample rate and both feet — see [Known Limitations](#known-limitations) |
 | 3 | Enable real-time data collection and wireless transmission via BLE | Implemented at 1 Hz |
 | 4 | Detect abnormal pressure patterns clinically linked to diabetic foot complications | Fixed per-zone thresholds; not clinically validated |
 
@@ -323,7 +323,7 @@ V_battery = adc × 6.6 / 4095
 SOC %     = (V_battery − 3.0) / (4.2 − 3.0) × 100
 ```
 
-This is a straight-line estimate and the result is not clamped, so it can read below 0% or above 100%. The sketch also contains a LiPo discharge curve (`BATT_CURVE`) and `voltageToSOC()`, but that call is commented out.
+This is a straight-line estimate and the result is not clamped, so it can read below 0% or above 100%. The sketch also contains a LiPo discharge curve (`BATT_CURVE`) and `voltageToSOC()`, but that call is commented out. The web app works back to the voltage from this value and applies the same curve, so it shows a clamped percentage.
 
 ### BLE Security
 
@@ -349,13 +349,18 @@ HTML, CSS and JavaScript are all in `index.html`.
 
 ### Features
 
-- Live foot heatmap for a single foot
-- Zone colours scale with load from 0 to 4500 g: blue → green → amber → red. Colour uses this one scale for every zone, while the Normal / Elevated / High tags use each zone's own thresholds
-- Temperature gauge with status bands
-- Sensor Readings panel showing all 5 FSRs in grams, plus battery %
+- Live foot heatmap for a single foot, with light and dark themes that follow the device setting
+- Zone colours and bars scale from 0 to that zone's High limit, so they always agree with the Normal / Elevated / High tags
+- Temperature reading with status bands
+- Load balance: forefoot, arch and heel share of load over the last 60 seconds
 - Overall status banner with a plain-language assessment
+- Body weight setting in kg or lb, used for personal limits and for showing load as a percentage of body weight
+- Current session stats, and a history of the last 20 sessions with at least 30 seconds of wear
+- Sustained pressure alerts with a beep, vibration, in-app toast and background notification
+- Automatic reconnection after a dropped connection
+- Warnings for missing data, a failed temperature sensor, a sensor at its maximum reading, and no load on the insole
 - Battery badge: green above 60%, amber above 20%, red otherwise
-- Sustained pressure alerts with an audible beep, in-app toast and desktop-style notification
+- Demo mode with labelled, simulated data for use without an insole. Demo sessions aren't saved
 - Installable as a standalone app, portrait orientation
 
 ### Pressure Zones
@@ -368,6 +373,13 @@ HTML, CSS and JavaScript are all in `index.html`.
 | 4 | Metatarsal (Medial) | 1800 g | 3200 g |
 | 5 | Large Toe (Hallux) | 1200 g | 2200 g |
 
+These are the standard limits. They are treated as suiting a 70 kg adult:
+
+- Under 70 kg, each limit is scaled by `weight / 70`, rounded to the nearest 50 g, and scaled no lower than 60%. For example, the heel High limit at 50 kg is 2500 g.
+- At 70 kg and above, the standard limits apply. Limits are never raised, because body weight doesn't make skin more tolerant of pressure.
+
+The scaling is a design choice and has not been clinically validated. Change `REFERENCE_WEIGHT_KG`, `MIN_LIMIT_SCALE` or `MAX_LIMIT_SCALE` in `index.html` to adjust it. Settings shows the limits in use.
+
 ### Temperature Bands
 
 | Temperature | Label | Effect on status banner |
@@ -375,7 +387,7 @@ HTML, CSS and JavaScript are all in `index.html`.
 | ≥ 37.5 °C | High temperature | Danger |
 | 36.8–37.5 °C | Mildly elevated | Warning |
 | 33–36.8 °C | Normal | None |
-| < 33 °C | Cool — check sensor contact | None |
+| < 33 °C | Cool — check the insole is being worn | None |
 
 ### Alert System
 
@@ -387,14 +399,15 @@ The app checks every zone each time a pressure value arrives. If a zone stays at
 
 If the zone stays in danger, the alert repeats every **60 seconds**. The 30-second timer resets as soon as that zone drops below its danger threshold. Disconnecting clears all alert timers.
 
-Notification permission is requested when the device connects. Alerts depend on the page continuing to receive BLE data, so they stop if the device disconnects or the browser suspends the page.
+If the connection drops, the app retries 5 times, 2 seconds apart. If that fails, it raises a "Monitoring stopped" alert.
+
+Notification permission is requested when the device connects, and can also be turned on in Settings. Notifications are shown through the service worker, which Chrome on Android requires. Alerts depend on the page continuing to receive BLE data, so they stop if the browser suspends the page.
 
 ### Service Worker & Hosting
 
-`app/sw.js` caches `/index.html`, `/manifest.json` and both icons in the `solesense-v1` cache, then serves everything cache-first.
+`app/sw.js` caches the app shell and serves it from the cache, refreshing the cache in the background. A new release therefore reaches users on their next launch after it has been fetched, without any cache name change.
 
-- **Deploying updates:** because cached files are served first, change `CACHE_NAME` in `sw.js` with each release, or returning users will keep the old `index.html`.
-- **Hosting path:** the service worker expects the app at the domain root (`/sw.js`, `/index.html`), while `manifest.json` sets `start_url` to `/solesense/app`. These must be made to agree for your host; see [Known Limitations](#known-limitations).
+All paths are relative, so the app can be hosted at a domain root or in any subfolder. Host the contents of `app/` as they are.
 
 ### Installation
 
@@ -496,11 +509,14 @@ npx serve app/
 ### 4. Connect
 
 1. Open the app in Chrome (Android) or Bluefy (iOS)
-2. Tap **Connect**
-3. Select **Insole Monitor v1.0** from the device list
-4. Enter passkey `123456` if prompted
-5. Allow notification permission when prompted
-6. Readings begin arriving, updating once per second
+2. Optionally open Settings and enter your body weight
+3. Tap **Connect**
+4. Select **Insole Monitor v1.0** from the device list
+5. Enter passkey `123456` if prompted
+6. Allow notification permission when prompted
+7. Readings begin arriving, updating once per second
+
+Without an insole, select **View demo** to see the app with simulated data.
 
 ---
 
@@ -529,7 +545,7 @@ Both tables are shared: `CAL_10KG` is used by all four 10 kg sensors. Calibratin
 | Plantar temperature | 33–36.8 °C | 36.8–37.5 °C | ≥ 37.5 °C |
 | Time at danger level | < 30 s | — | ≥ 30 s → alert, repeating every 60 s |
 
-> ⚠️ These thresholds are indicative starting points, measured in grams of force rather than pressure. Clinical deployment should involve threshold validation with a qualified podiatrist or diabetologist.
+> ⚠️ These are the standard limits; lower limits apply under 70 kg. They are indicative starting points, measured in grams of force rather than pressure. Clinical deployment should involve threshold validation with a qualified podiatrist or diabetologist.
 
 ---
 
@@ -538,22 +554,22 @@ Both tables are shared: `CAL_10KG` is used by all four 10 kg sensors. Calibratin
 **Sensing and firmware**
 
 - **ADC range:** with a 100 kΩ fixed resistor, every warn and danger load in the app calculates to about 37–112 mV at the ADC. That is below the roughly 150 mV where the ESP32 ADC becomes usable at 11 dB, so high loads may read as 0 V, which the firmware reports as the table maximum (9 kg or 18 kg). This is calculated and has not been measured on hardware.
-- **Sample rate:** 1 Hz is too slow to capture individual steps.
+- **Gait analysis:** this is left out on purpose. The firmware takes one snapshot per second, while one foot's walking stride takes about a second, so steps can't be counted or timed. Cadence and stance/swing timing need at least 10 Hz, and symmetry needs both feet.
 - **Battery:** the straight-line estimate doesn't follow a LiPo discharge curve (3.7 V reads 58%), and the raw ADC value isn't corrected for ESP32 ADC non-linearity.
 - **Security:** the BLE passkey is hardcoded and the same on every device.
 - **Unused code:** `voltageToSOC()`, `BATT_CURVE`, `notifyString()` and `BLE_MTU_REQUEST` are not used.
 
 **Web app**
 
-- **Notifications:** the app uses `new Notification()`, which Chrome on Android does not support, so background notifications are not expected to appear there. The in-app toast and beep are unaffected.
-- **Hosting paths:** no single hosting location currently satisfies both the manifest and the service worker. At the domain root, an installed app opens `/solesense/app`, which doesn't exist. Under `/solesense/app/`, the service worker fails to register and offline loading is lost.
-- **Offline fallback:** `sw.js` falls back to `/solesense.html`, which no longer exists.
-- **Unused code:** the Google Fonts handling in `sw.js` has no effect, because the app loads no web fonts.
+- **Background use:** browsers may suspend a backgrounded page, which stops alerts. This depends on the phone and hasn't been tested on real devices.
+- **Sensor limit:** the app flags readings at the top of a calibration table, but can't tell a true maximum load from the ADC problem described above.
+- **Stored data:** weight and history are stored per browser, unencrypted, and are lost if site data is cleared.
 
 **Monitoring logic**
 
 - **Walking:** the 30-second timer restarts when a zone drops below danger, so alerts fire during sustained standing but not normally during walking.
-- **Sensor faults:** the banner doesn't report a failed temperature sensor. It continues to use the last value, or shows "Normal" if no temperature has arrived. It also shows "Normal" when the insole isn't being worn.
+- **Sensor faults:** the firmware keeps sending the last temperature if the sensor fails mid-session, so the app can only infer this after the value has stayed the same for 10 minutes.
+- **Wear detection:** "No load" only means the total reading is under 100 g for 5 seconds. Sitting with the foot raised looks the same as not wearing the insole.
 - **Temperature:** the app uses one sensor and absolute thresholds. It can't compare matching sites on both feet.
 
 ---

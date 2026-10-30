@@ -1,16 +1,17 @@
 /**
  * SoleSense Service Worker
  * Caches the app shell for offline/installable use.
- * BLE itself always needs to be online (hardware access),
- * but the UI loads instantly from cache even without network.
+ * Paths are relative to this file, so the app works from any hosting folder.
+ * BLE talks to the insole directly, so monitoring also works without internet.
  */
 
-const CACHE_NAME = 'solesense-v1';
+const CACHE_NAME = 'solesense-v2';
 const ASSETS = [
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  'index.html',
+  'manifest.json',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
 ];
 
 // Install — cache app shell
@@ -34,27 +35,41 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Fetch — cache-first for app shell, network-first for Google Fonts
+// Fetch — serve from cache immediately and refresh it in the background,
+// so a new release reaches users on their next launch.
 self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
+  if (e.request.method !== 'GET') return;
+  if (new URL(e.request.url).origin !== self.location.origin) return;
 
-  // Let Google Fonts go to network (they have their own cache headers)
-  if (url.hostname.includes('googleapis.com') || url.hostname.includes('gstatic.com')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('')));
-    return;
-  }
+  const refresh = fetch(e.request).then((response) => {
+    if (response.ok) {
+      const clone = response.clone();
+      caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+    }
+    return response;
+  });
 
-  // Cache-first for everything else
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      return cached || fetch(e.request).then((response) => {
-        // Cache any successful GET response dynamically
-        if (e.request.method === 'GET' && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        }
-        return response;
+    caches.match(e.request, { ignoreSearch: true }).then((cached) => {
+      if (cached) {
+        refresh.catch(() => {});
+        return cached;
+      }
+      return refresh.catch(() => {
+        if (e.request.mode === 'navigate') return caches.match('index.html');
+        return Response.error();
       });
-    }).catch(() => caches.match('/solesense.html'))
+    })
+  );
+});
+
+// Tapping an alert notification returns the user to the app
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      if (windows.length > 0) return windows[0].focus();
+      return self.clients.openWindow(self.registration.scope);
+    })
   );
 });

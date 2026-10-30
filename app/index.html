@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SoleSense — Insole Monitor</title>
 <link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#0d1117"/>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f7f8"/>
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1518"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -13,20 +14,48 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png"/>
 <style>
   :root {
-    --bg:        #0d1117;
-    --surface:   #161b22;
-    --surface2:  #1f2733;
-    --border:    #30363d;
-    --text:      #e6edf3;
-    --muted:     #7d8590;
-    --accent:    #3fb950;
-    --warn:      #d29922;
-    --danger:    #f85149;
-    --teal:      #39c5cf;
+    color-scheme: light dark;
+    --bg:        #f4f7f8;
+    --surface:   #ffffff;
+    --surface2:  #eef2f4;
+    --border:    #dce3e7;
+    --text:      #14222b;
+    --muted:     #586a76;
+    --primary:   #0a7470;
+    --on-primary:#ffffff;
+    --ok:        #17795a;
+    --warn:      #9a5b00;
+    --danger:    #c0292b;
+    --ok-soft:     rgba(23,121,90,0.10);
+    --warn-soft:   rgba(190,120,0,0.13);
+    --danger-soft: rgba(192,41,43,0.10);
+    --foot-fill:   #e7edf0;
+    --foot-line:   #b9c6cd;
+    --shadow:    0 1px 2px rgba(20,34,43,0.05), 0 4px 16px rgba(20,34,43,0.05);
     --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --mono:      'SF Mono', SFMono-Regular, ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
-    --radius:    12px;
-    --radius-sm: 7px;
+    --radius:    14px;
+    --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0f1518;
+      --surface:   #172024;
+      --surface2:  #202b30;
+      --border:    #2b383e;
+      --text:      #e8eef0;
+      --muted:     #97a7af;
+      --primary:   #3cc4bb;
+      --on-primary:#06201e;
+      --ok:        #4cc38a;
+      --warn:      #e8a73f;
+      --danger:    #f4736c;
+      --ok-soft:     rgba(76,195,138,0.12);
+      --warn-soft:   rgba(232,167,63,0.13);
+      --danger-soft: rgba(244,115,108,0.13);
+      --foot-fill:   #202b30;
+      --foot-line:   #3b4b52;
+      --shadow:    none;
+    }
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,340 +64,538 @@
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
+    line-height: 1.45;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0 0 48px;
+    padding-bottom: 40px;
+    font-variant-numeric: tabular-nums;
   }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .icon { width: 1.25em; height: 1.25em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
   header {
-    width: 100%;
-    max-width: 480px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 20px 0;
     gap: 10px;
   }
-  .logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 9px; min-width: 0; }
   .logo-icon {
-    width: 28px; height: 28px;
-    background: linear-gradient(135deg, var(--teal), var(--accent));
-    border-radius: 8px;
+    width: 32px; height: 32px;
+    background: var(--primary);
+    color: var(--on-primary);
+    border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .logo-icon svg { width: 16px; height: 16px; fill: #0d1117; }
-  .logo-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.3px; }
-  .logo-text span { color: var(--teal); }
-
+  .logo-icon svg { width: 18px; height: 18px; fill: currentColor; }
+  .logo-text { font-size: 1.05rem; font-weight: 650; letter-spacing: -0.01em; }
   .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-  #battBadge {
-    display: none;
-    font-size: 0.75rem;
-    font-family: var(--mono);
-    color: var(--muted);
-    white-space: nowrap;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 5px 10px;
-    border-radius: 20px;
-    transition: color 0.3s, border-color 0.3s;
-  }
-
-  #connectBtn {
-    display: flex;
+  .btn {
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 7px;
-    background: var(--surface2);
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    background: var(--surface);
+    font-size: 0.875rem;
+    font-weight: 600;
     white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
   }
-  #connectBtn:hover { background: #2a333f; border-color: var(--teal); }
-  #connectBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-  #connectBtn.connected  { border-color: var(--accent); color: var(--accent); }
-  #connectBtn.connected .ble-dot { background: var(--accent); }
-  #connectBtn.connecting { border-color: var(--warn); color: var(--warn); opacity: 0.85; }
-  .ble-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-    flex-shrink: 0;
-    transition: background 0.3s;
+  .btn:hover:not(:disabled) { border-color: var(--primary); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+  .btn.danger  { color: var(--danger); }
+  .btn.icon-only { width: 40px; padding: 0; }
+  .btn.link { border: none; background: none; padding: 0; min-height: 0; color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+
+  #battBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--surface2);
+    color: var(--muted);
   }
-  .ble-dot.pulse { animation: pulse 1.4s infinite; }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.25; }
-  }
+  #battBadge.ok     { color: var(--ok); }
+  #battBadge.warn   { color: var(--warn); }
+  #battBadge.danger { color: var(--danger); }
 
   main {
-    width: 100%;
-    max-width: 480px;
-    padding: 20px 16px 0;
-    display: flex;
-    flex-direction: column;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 16px 16px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
+  .column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+  #noBleWarning, #weightPrompt {
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 0.875rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  #noBleWarning { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+  #weightPrompt { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
   #statusBanner {
     border-radius: var(--radius);
-    padding: 13px 16px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    padding: 14px 16px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
     border: 1px solid transparent;
-    transition: background 0.3s, border-color 0.3s;
+    transition: background 0.3s;
   }
-  #statusBanner.normal { background: rgba(63,185,80,0.08);  border-color: rgba(63,185,80,0.25);  color: var(--accent); }
-  #statusBanner.warn   { background: rgba(210,153,34,0.08); border-color: rgba(210,153,34,0.25); color: var(--warn); }
-  #statusBanner.danger { background: rgba(248,81,73,0.08);  border-color: rgba(248,81,73,0.25);  color: var(--danger); }
+  #statusBanner.normal { background: var(--ok-soft);     color: var(--ok); }
+  #statusBanner.warn   { background: var(--warn-soft);   color: var(--warn);   border-color: currentColor; }
+  #statusBanner.danger { background: var(--danger-soft); color: var(--danger); border-color: currentColor; }
   #statusBanner.idle   { background: var(--surface); border-color: var(--border); color: var(--muted); }
-  .status-icon { font-size: 1.1rem; flex-shrink: 0; }
-  #statusText  { flex: 1; }
-  #statusSub   { font-size: 0.75rem; font-weight: 400; opacity: 0.8; margin-top: 1px; }
+  #statusIcon { font-size: 1.15rem; margin-top: 1px; }
+  .status-copy { flex: 1; min-width: 0; }
+  #statusText { font-weight: 650; }
+  #statusSub  { font-size: 0.85rem; color: var(--text); opacity: 0.85; margin-top: 1px; }
+  #demoBtn    { flex-shrink: 0; align-self: center; }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    box-shadow: var(--shadow);
+    min-width: 0;
   }
   .card-header {
-    padding: 14px 16px 10px;
+    padding: 13px 16px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border);
+    gap: 10px;
   }
-  .card-title {
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--muted);
-  }
+  .card-title { font-size: 0.95rem; font-weight: 650; }
   .card-badge {
-    font-size: 0.7rem;
-    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 600;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 999px;
     background: var(--surface2);
     color: var(--muted);
+    white-space: nowrap;
   }
-  .card-badge.live { background: rgba(63,185,80,0.1); color: var(--accent); }
+  .card-badge.live { background: var(--ok-soft); color: var(--ok); }
+  .card-body { padding: 12px 16px 16px; }
+  .note { font-size: 0.78rem; color: var(--muted); }
 
-  /* ── Heatmap layout — SVG shrinks first, zone list keeps room ─── */
-  .heatmap-wrap {
-    padding: 20px 14px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .foot-svg-container {
-    position: relative;
-    width: 120px;
-    flex: 0 0 120px;
-  }
-  .foot-svg-container svg { display: block; width: 100%; height: auto; background: transparent; }
+  body[data-frozen="true"] .readings { opacity: 0.5; }
+  .readings { transition: opacity 0.3s; }
 
-  .zone-list {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 9px;
-    padding: 4px 0;
-  }
-  .zone-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
-  .zone-swatch { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; transition: background 0.5s; }
-  .zone-info   { flex: 1; min-width: 0; }
-  .zone-name   { font-size: 0.7rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .zone-val    { font-size: 0.64rem; font-family: var(--mono); color: var(--muted); margin-top: 1px; }
-  .zone-tag    { font-size: 0.6rem; font-weight: 600; padding: 1px 5px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
-  .zone-tag.ok     { background: rgba(63,185,80,0.12);  color: var(--accent); }
-  .zone-tag.warn   { background: rgba(210,153,34,0.15); color: var(--warn); }
-  .zone-tag.danger { background: rgba(248,81,73,0.12);  color: var(--danger); }
-  .fsr-zone { transition: fill 0.5s cubic-bezier(.4,0,.2,1), filter 0.5s; cursor: pointer; }
-  .fsr-zone:hover { filter: brightness(1.25); }
+  /* ── Pressure map ─────────────────────────────────────────── */
+  .heatmap-wrap { display: flex; gap: 14px; align-items: center; padding: 12px 16px 8px; }
+  .foot-svg-container { flex: 0 0 38%; max-width: 190px; min-width: 104px; }
+  .foot-svg-container svg { display: block; width: 100%; height: auto; }
+  .foot-shape { fill: var(--foot-fill); stroke: var(--foot-line); stroke-width: 2; }
+  .sensor-dot { fill: var(--surface); stroke: var(--foot-line); stroke-width: 1.5; }
+  .sensor-num { fill: var(--text); font-size: 13px; font-weight: 650; text-anchor: middle; dominant-baseline: central; font-family: var(--font); }
+  .heat { transition: opacity 0.5s; }
 
-  .legend-wrap { padding: 0 16px 16px; display: flex; align-items: center; gap: 10px; }
+  .zone-list { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 11px; }
+  .zone-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+  .zone-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zone-name b { color: var(--muted); font-weight: 650; margin-right: 3px; }
+  .zone-tag { font-size: 0.68rem; font-weight: 650; white-space: nowrap; color: var(--muted); }
+  .zone-tag.ok     { color: var(--ok); }
+  .zone-tag.warn   { color: var(--warn); }
+  .zone-tag.danger { color: var(--danger); }
+  .zone-bar { height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; margin-top: 3px; }
+  .zone-fill { height: 100%; width: 0; border-radius: 3px; transition: width 0.5s, background 0.5s; }
+  .zone-val { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  .legend-wrap { padding: 4px 16px 14px; display: flex; align-items: center; gap: 8px; }
   .legend-bar {
     flex: 1; height: 6px; border-radius: 3px;
-    background: linear-gradient(to right, #1e3a5f, #2563eb, #16a34a, #ca8a04, #dc2626);
+    background: linear-gradient(to right, #2f6fb0, #1aa37a 35%, #e0a526 60%, #d8342c);
   }
-  .legend-label { font-size: 0.65rem; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+  .legend-label { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
 
-  .temp-body { padding: 18px 16px; display: flex; align-items: center; gap: 16px; }
-  .temp-circle {
-    width: 64px; height: 64px; border-radius: 50%;
-    border: 2px solid var(--teal);
-    display: flex; align-items: center; justify-content: center; flex-direction: column;
-    background: rgba(57,197,207,0.06);
-    flex-shrink: 0;
-    transition: border-color 0.4s, background 0.4s;
+  /* ── Temperature ──────────────────────────────────────────── */
+  .temp-body { display: flex; align-items: center; gap: 14px; }
+  .temp-reading { flex-shrink: 0; min-width: 92px; }
+  .temp-val { font-size: 2rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+  .temp-val small { font-size: 0.95rem; font-weight: 500; color: var(--muted); margin-left: 2px; letter-spacing: 0; }
+  .temp-label { font-size: 0.9rem; font-weight: 650; }
+  .temp-label.warn   { color: var(--warn); }
+  .temp-label.danger { color: var(--danger); }
+  .temp-desc { font-size: 0.8rem; color: var(--muted); margin-top: 1px; }
+
+  /* ── Load balance ─────────────────────────────────────────── */
+  .split-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; background: var(--surface2); }
+  .split-seg { min-width: 0; width: 0; background: var(--primary); transition: width 0.5s; }
+  .split-seg.alt  { opacity: 0.72; }
+  .split-seg.alt2 { opacity: 0.48; }
+  .split-labels { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 0.8rem; color: var(--muted); }
+  .split-labels b { display: block; color: var(--text); font-size: 1.05rem; font-weight: 650; }
+  .bw-line { margin-top: 12px; font-size: 0.875rem; }
+  .bw-line strong { font-weight: 650; }
+
+  /* ── Session and history ──────────────────────────────────── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); }
+  .stat-val { font-size: 1.05rem; font-weight: 650; }
+  .history-list { list-style: none; }
+  .history-list li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding: 9px 0; border-top: 1px solid var(--border); font-size: 0.85rem;
   }
-  .temp-circle.warn   { border-color: var(--warn);   background: rgba(210,153,34,0.07); }
-  .temp-circle.danger { border-color: var(--danger);  background: rgba(248,81,73,0.07); }
-  .temp-val  { font-family: var(--mono); font-size: 1.15rem; font-weight: 500; color: var(--teal); line-height: 1; transition: color 0.4s; }
-  .temp-circle.warn   .temp-val  { color: var(--warn); }
-  .temp-circle.danger .temp-val  { color: var(--danger); }
-  .temp-unit { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
-  .temp-info  { flex: 1; }
-  .temp-label { font-size: 0.9rem; font-weight: 600; }
-  .temp-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .history-list li:first-child { border-top: none; padding-top: 0; }
+  .history-list span { color: var(--muted); font-size: 0.78rem; text-align: right; }
+  .history-list .has-alerts { color: var(--danger); font-weight: 600; }
 
-  .raw-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; }
-  .raw-cell { padding: 12px 6px; text-align: center; border-right: 1px solid var(--border); }
-  .raw-cell:last-child { border-right: none; }
-  .raw-cell-label { font-size: 0.6rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-  .raw-cell-val   { font-family: var(--mono); font-size: 0.8rem; font-weight: 500; margin-top: 4px; color: var(--text); }
-  .raw-cell-val.batt-ok     { color: var(--accent); }
-  .raw-cell-val.batt-warn   { color: var(--warn); }
-  .raw-cell-val.batt-danger { color: var(--danger); }
-
-  .idle-msg {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px; padding: 32px 16px;
-    color: var(--muted); font-size: 0.82rem; text-align: center;
-  }
-  .idle-msg svg { opacity: 0.3; }
-
-  #noBleWarning {
-    display: none;
-    background: rgba(248,81,73,0.08);
-    border: 1px solid rgba(248,81,73,0.3);
+  /* ── Settings dialog ──────────────────────────────────────── */
+  dialog {
+    margin: auto;
+    width: min(440px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 16px;
-    font-size: 0.82rem;
-    color: var(--danger);
-    line-height: 1.5;
-    margin: 20px 16px 0;
-    max-width: 480px;
-    width: calc(100% - 32px);
+    background: var(--surface);
+    color: var(--text);
+    padding: 18px;
+  }
+  dialog::backdrop { background: rgba(8,14,17,0.55); }
+  dialog h2 { font-size: 1.1rem; font-weight: 650; }
+  dialog h3 { font-size: 0.875rem; font-weight: 650; margin: 16px 0 5px; }
+  .field-row { display: flex; gap: 8px; margin-top: 6px; }
+  .field-row input {
+    flex: 1; min-width: 0; min-height: 42px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg); padding: 0 11px;
+  }
+  .unit-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .unit-toggle label { display: flex; align-items: center; padding: 0 13px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--muted); }
+  .unit-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  .unit-toggle input:checked + label { background: var(--primary); color: var(--on-primary); }
+  .unit-toggle input:focus-visible + label { outline: 2px solid var(--primary); outline-offset: -2px; }
+  #weightError { color: var(--danger); font-size: 0.8rem; margin-top: 4px; }
+  .limits-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .limits-table th { text-align: right; font-weight: 600; color: var(--muted); padding: 3px 0; }
+  .limits-table th:first-child, .limits-table td:first-child { text-align: left; }
+  .limits-table td { text-align: right; padding: 3px 0; border-top: 1px solid var(--border); }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+  #alertToast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    width: min(400px, calc(100% - 32px));
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--danger); border-radius: var(--radius);
+    padding: 13px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    z-index: 50;
+    animation: slideUp 0.25s ease;
+  }
+  #alertToast .icon { color: var(--danger); margin-top: 2px; }
+  .toast-copy { flex: 1; min-width: 0; }
+  #toastTitle { font-weight: 650; font-size: 0.9rem; color: var(--danger); }
+  #toastBody  { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  #toastClose { border: none; background: none; color: var(--muted); padding: 2px; display: flex; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(14px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .ble-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+  .ble-dot.on { opacity: 1; background: var(--ok); }
+  .ble-dot.pulse { animation: pulse 1.4s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
   }
 
   footer {
-    margin-top: 28px;
-    font-size: 0.7rem;
+    max-width: 1040px;
+    margin: 22px auto 0;
+    font-size: 0.75rem;
     color: var(--muted);
     text-align: center;
     padding: 0 16px;
-    line-height: 1.6;
   }
 
+  @media (min-width: 900px) {
+    main { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+    .full { grid-column: 1 / -1; }
+    .foot-svg-container { flex-basis: 42%; max-width: 220px; }
+  }
+  @media (max-width: 480px) {
+    body[data-state="connected"] .logo-text,
+    body[data-state="reconnecting"] .logo-text,
+    body[data-state="lost"] .logo-text { display: none; }
+    #statusBanner { flex-wrap: wrap; }
+    .status-copy { flex-basis: calc(100% - 44px); }
+    #demoBtn { margin-left: 35px; }
+  }
   @media (max-width: 360px) {
-    .heatmap-wrap { gap: 8px; padding: 16px 10px; }
-    .foot-svg-container { width: 96px; flex: 0 0 96px; }
-    .zone-name { font-size: 0.65rem; }
-    .zone-val  { font-size: 0.6rem; }
-    .raw-grid { grid-template-columns: repeat(3, 1fr); }
-    .raw-cell { border-bottom: 1px solid var(--border); }
+    #battBadge .icon { display: none; }
+    .zone-name { white-space: normal; }
+    .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
-<body>
+<body data-state="idle" data-frozen="false">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.4v.1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.1"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 0 1-4 0V21a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2.5" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+</svg>
 
 <header>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M13 2C9.13 2 6 5.13 6 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26C18.81 13.47 20 11.38 20 9c0-3.87-3.13-7-7-7zm2 14h-4v-1h4v1zm0-3h-4v-1h4v1z"/>
-      </svg>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 2.5c1.7 0 3 1.6 3 3.6 0 1.4-.6 2.6-.7 3.9-.1 1.2.4 2.2.4 3.4 0 1.4-1 2.1-2.3 2.1s-2.5-.8-2.9-2.3C6 11.300 5.500 9.700 5.500 7.500c0-2.900 1.500-5 3.500-5Z"/>
+          <path d="M8 17.300c1.300.5 3 .2 4-.5.300 1.900-.5 4.700-2.500 4.700-1.800 0-2.100-2.300-1.500-4.200Z"/>
+          <path d="M15.500 5.500c1.700 0 3 1.500 3 3.400 0 1.900-.9 3.500-1.100 5-.2 1.300-1.100 2-2.300 2-1.400 0-2.300-1-2.100-2.500.2-1.300.1-2.400 0-3.800-.2-2.400.8-4.100 2.500-4.100Z" opacity="0.7"/>
+        </svg>
+      </div>
+      <span class="logo-text">SoleSense</span>
     </div>
-    <span class="logo-text">Sole<span>Sense</span></span>
-  </div>
-  <div class="header-right">
-    <span id="battBadge">🔋 --%</span>
-    <button id="connectBtn" onclick="toggleBLE()">
-      <span class="ble-dot" id="bleDot"></span>
-      <span id="btnLabel">Connect</span>
-    </button>
+    <div class="header-right">
+      <span id="battBadge" hidden>
+        <svg class="icon" aria-hidden="true"><use href="#i-battery"/></svg>
+        <span id="battText">--%</span>
+      </span>
+      <button id="connectBtn" class="btn primary" onclick="toggleBLE()">
+        <span class="ble-dot" id="bleDot"></span>
+        <span id="btnLabel">Connect</span>
+      </button>
+      <button class="btn icon-only" onclick="openSettings()" aria-label="Settings">
+        <svg class="icon" aria-hidden="true"><use href="#i-gear"/></svg>
+      </button>
+    </div>
   </div>
 </header>
 
-<div id="noBleWarning">
-  ⚠️ Web Bluetooth is not available in this browser. Use Chrome or Edge on Android/desktop, served over HTTPS or localhost.
-</div>
-
 <main>
-  <div id="statusBanner" class="idle">
-    <span class="status-icon" id="statusIcon">○</span>
-    <div>
+  <div id="noBleWarning" class="full" hidden>
+    Bluetooth isn't available in this browser. Use Chrome or Edge on Android or desktop, or Bluefy on iOS, with the app served over HTTPS or localhost.
+  </div>
+
+  <div id="statusBanner" class="idle full" aria-live="polite">
+    <svg class="icon" id="statusIcon" aria-hidden="true"><use id="statusIconUse" href="#i-info"/></svg>
+    <div class="status-copy">
       <div id="statusText">Not connected</div>
-      <div id="statusSub">Connect your insole device to start monitoring</div>
+      <div id="statusSub">Connect your insole to start monitoring</div>
     </div>
+    <button id="demoBtn" class="btn" onclick="startDemo()">View demo</button>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">Plantar Pressure Map</span>
-      <span class="card-badge" id="hmBadge">— —</span>
-    </div>
-    <div class="heatmap-wrap" id="heatmapBody">
-      <div class="idle-msg" id="hmIdle">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <ellipse cx="12" cy="14" rx="6" ry="8"/>
-          <path d="M9 6c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
-        </svg>
-        Awaiting sensor data
-      </div>
-    </div>
-    <div class="legend-wrap" id="legendWrap" style="display:none">
-      <span class="legend-label">0 g</span>
-      <div class="legend-bar"></div>
-      <span class="legend-label">4500 g</span>
-    </div>
+  <div id="weightPrompt" class="full" hidden>
+    <span>Add your body weight to personalise your limits.</span>
+    <button class="btn link" onclick="openSettings()">Add weight</button>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">Foot Temperature</span>
-      <span class="card-badge" id="tempBadge">— —</span>
-    </div>
-    <div class="temp-body">
-      <div class="temp-circle" id="tempCircle">
-        <span class="temp-val" id="tempVal">--.-</span>
-        <span class="temp-unit">°C</span>
+  <div class="column">
+    <section class="card" aria-labelledby="mapTitle">
+      <div class="card-header">
+        <h2 class="card-title" id="mapTitle">Pressure map</h2>
+        <span class="card-badge" id="hmBadge">Standard limits</span>
       </div>
-      <div class="temp-info">
-        <div class="temp-label" id="tempLabel">No data</div>
-        <div class="temp-desc"  id="tempDesc">Connect device to read foot temperature</div>
+      <div class="heatmap-wrap readings">
+        <div class="foot-svg-container">
+          <svg id="footSVG" viewBox="0 0 200 380" role="img" aria-label="Foot diagram with five pressure zones">
+            <defs>
+              <radialGradient id="heat0"><stop offset="0" style="stop-color:var(--heat-0)"/><stop offset="0.55" style="stop-color:var(--heat-0);stop-opacity:0.6"/><stop offset="1" style="stop-color:var(--heat-0);stop-opacity:0"/></radialGradient>
+              <radialGradient id="heat1"><stop offset="0" style="stop-color:var(--heat-1)"/><stop offset="0.55" style="stop-color:var(--heat-1);stop-opacity:0.6"/><stop offset="1" style="stop-color:var(--heat-1);stop-opacity:0"/></radialGradient>
+              <radialGradient id="heat2"><stop offset="0" style="stop-color:var(--heat-2)"/><stop offset="0.55" style="stop-color:var(--heat-2);stop-opacity:0.6"/><stop offset="1" style="stop-color:var(--heat-2);stop-opacity:0"/></radialGradient>
+              <radialGradient id="heat3"><stop offset="0" style="stop-color:var(--heat-3)"/><stop offset="0.55" style="stop-color:var(--heat-3);stop-opacity:0.6"/><stop offset="1" style="stop-color:var(--heat-3);stop-opacity:0"/></radialGradient>
+              <radialGradient id="heat4"><stop offset="0" style="stop-color:var(--heat-4)"/><stop offset="0.55" style="stop-color:var(--heat-4);stop-opacity:0.6"/><stop offset="1" style="stop-color:var(--heat-4);stop-opacity:0"/></radialGradient>
+              <clipPath id="footClip">
+                <path d="M62 96C78 78 118 74 146 86C168 96 176 122 168 150C160 182 148 210 146 244C144 276 150 300 146 326C142 354 120 368 98 368C74 368 58 352 56 326C54 298 72 272 76 236C80 200 44 172 40 140C38 120 46 106 62 96Z"/>
+                <ellipse cx="66" cy="54" rx="21" ry="29" transform="rotate(-5 66 54)"/>
+                <ellipse cx="106" cy="50" rx="11" ry="16"/>
+                <ellipse cx="130" cy="57" rx="10" ry="14" transform="rotate(8 130 57)"/>
+                <ellipse cx="150" cy="70" rx="9" ry="12.500" transform="rotate(14 150 70)"/>
+                <ellipse cx="167" cy="88" rx="8" ry="11" transform="rotate(22 167 88)"/>
+              </clipPath>
+            </defs>
+            <g class="foot-shape">
+              <path d="M62 96C78 78 118 74 146 86C168 96 176 122 168 150C160 182 148 210 146 244C144 276 150 300 146 326C142 354 120 368 98 368C74 368 58 352 56 326C54 298 72 272 76 236C80 200 44 172 40 140C38 120 46 106 62 96Z"/>
+              <ellipse cx="66" cy="54" rx="21" ry="29" transform="rotate(-5 66 54)"/>
+              <ellipse cx="106" cy="50" rx="11" ry="16"/>
+              <ellipse cx="130" cy="57" rx="10" ry="14" transform="rotate(8 130 57)"/>
+              <ellipse cx="150" cy="70" rx="9" ry="12.500" transform="rotate(14 150 70)"/>
+              <ellipse cx="167" cy="88" rx="8" ry="11" transform="rotate(22 167 88)"/>
+            </g>
+            <g clip-path="url(#footClip)">
+              <circle class="heat" id="zone0" cx="102" cy="318" r="62" fill="url(#heat0)" opacity="0"/>
+              <circle class="heat" id="zone1" cx="114" cy="218" r="46" fill="url(#heat1)" opacity="0"/>
+              <circle class="heat" id="zone2" cx="136" cy="128" r="48" fill="url(#heat2)" opacity="0"/>
+              <circle class="heat" id="zone3" cx="78" cy="126" r="48" fill="url(#heat3)" opacity="0"/>
+              <circle class="heat" id="zone4" cx="66" cy="54" r="36" fill="url(#heat4)" opacity="0"/>
+            </g>
+            <g>
+              <circle class="sensor-dot" cx="102" cy="318" r="11"/><text class="sensor-num" x="102" y="318">1</text>
+              <circle class="sensor-dot" cx="114" cy="218" r="11"/><text class="sensor-num" x="114" y="218">2</text>
+              <circle class="sensor-dot" cx="136" cy="128" r="11"/><text class="sensor-num" x="136" y="128">3</text>
+              <circle class="sensor-dot" cx="78" cy="126" r="11"/><text class="sensor-num" x="78" y="126">4</text>
+              <circle class="sensor-dot" cx="66" cy="54" r="11"/><text class="sensor-num" x="66" y="54">5</text>
+            </g>
+          </svg>
+        </div>
+        <div class="zone-list" id="zoneList"></div>
       </div>
-    </div>
+      <div class="legend-wrap">
+        <span class="legend-label">Low</span>
+        <div class="legend-bar"></div>
+        <span class="legend-label">High limit</span>
+      </div>
+    </section>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">Sensor Readings</span>
-      <span class="card-badge live" id="rawBadge" style="display:none">LIVE</span>
-    </div>
-    <div class="raw-grid">
-      <div class="raw-cell"><div class="raw-cell-label">FSR 1</div><div class="raw-cell-val" id="rv0">—</div></div>
-      <div class="raw-cell"><div class="raw-cell-label">FSR 2</div><div class="raw-cell-val" id="rv1">—</div></div>
-      <div class="raw-cell"><div class="raw-cell-label">FSR 3</div><div class="raw-cell-val" id="rv2">—</div></div>
-      <div class="raw-cell"><div class="raw-cell-label">FSR 4</div><div class="raw-cell-val" id="rv3">—</div></div>
-      <div class="raw-cell"><div class="raw-cell-label">FSR 5</div><div class="raw-cell-val" id="rv4">—</div></div>
-      <div class="raw-cell"><div class="raw-cell-label">Battery</div><div class="raw-cell-val" id="battVal">—</div></div>
-    </div>
+  <div class="column">
+    <section class="card" aria-labelledby="tempTitle">
+      <div class="card-header">
+        <h2 class="card-title" id="tempTitle">Foot temperature</h2>
+      </div>
+      <div class="card-body temp-body readings">
+        <div class="temp-reading">
+          <div class="temp-val"><span id="tempVal">--.-</span><small>°C</small></div>
+        </div>
+        <div>
+          <div class="temp-label" id="tempLabel">No data</div>
+          <div class="temp-desc" id="tempDesc">Connect your insole to read foot temperature</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="loadTitle">
+      <div class="card-header">
+        <h2 class="card-title" id="loadTitle">Load balance</h2>
+        <span class="card-badge">Last minute</span>
+      </div>
+      <div class="card-body readings">
+        <div class="split-bar" aria-hidden="true">
+          <div class="split-seg" id="segFore"></div>
+          <div class="split-seg alt" id="segMid"></div>
+          <div class="split-seg alt2" id="segRear"></div>
+        </div>
+        <div class="split-labels">
+          <div>Forefoot<b id="pctFore">—</b></div>
+          <div>Arch<b id="pctMid">—</b></div>
+          <div>Heel<b id="pctRear">—</b></div>
+        </div>
+        <div class="bw-line" id="bwLine">No load measured yet</div>
+        <div class="note" id="bwNote" style="margin-top:4px">Each sensor covers a small area, so this is a guide, not a full measure of your weight.</div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="sessionTitle">
+      <div class="card-header">
+        <h2 class="card-title" id="sessionTitle">This session</h2>
+        <span class="card-badge" id="demoBadge" hidden>Demo data</span>
+      </div>
+      <div class="card-body stat-grid">
+        <div><div class="stat-label">Monitoring</div><div class="stat-val" id="statActive">—</div></div>
+        <div><div class="stat-label">On foot</div><div class="stat-val" id="statWorn">—</div></div>
+        <div><div class="stat-label">High load</div><div class="stat-val" id="statHigh">—</div></div>
+        <div><div class="stat-label">Alerts</div><div class="stat-val" id="statAlerts">—</div></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="historyTitle">
+      <div class="card-header">
+        <h2 class="card-title" id="historyTitle">Recent sessions</h2>
+      </div>
+      <div class="card-body">
+        <ul class="history-list" id="historyList"></ul>
+        <p class="note" id="historyEmpty">Sessions with at least 30 seconds of wear are saved on this device.</p>
+      </div>
+    </section>
   </div>
 </main>
 
-<footer>SoleSense v1.0 &nbsp;·&nbsp; Requires Chrome / Edge with Web Bluetooth<br/>Keep device within 5 m for a stable connection</footer>
+<footer>SoleSense v1.1 · Prototype for monitoring only. It doesn't diagnose or treat any condition. Speak to your clinician about any concerns.</footer>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle">
+  <form id="settingsForm" novalidate>
+    <h2 id="settingsTitle">Settings</h2>
+
+    <h3><label for="weightInput">Body weight</label></h3>
+    <div class="field-row">
+      <input id="weightInput" type="number" inputmode="decimal" step="0.1" placeholder="Enter weight"/>
+      <div class="unit-toggle" role="radiogroup" aria-label="Weight unit">
+        <input type="radio" name="unit" id="unitKg" value="kg"/><label for="unitKg">kg</label>
+        <input type="radio" name="unit" id="unitLb" value="lb"/><label for="unitLb">lb</label>
+      </div>
+    </div>
+    <div id="weightError" role="alert" hidden></div>
+    <p class="note" style="margin-top:6px">Saved only in this browser. Limits are lowered for body weights under 70 kg. They are never raised above the standard limits.</p>
+
+    <h3>Your limits</h3>
+    <table class="limits-table">
+      <thead><tr><th scope="col">Zone</th><th scope="col">Elevated</th><th scope="col">High</th></tr></thead>
+      <tbody id="limitsBody"></tbody>
+    </table>
+
+    <h3>Background alerts</h3>
+    <div class="setting-row">
+      <span class="note" id="notifStatus"></span>
+      <button type="button" class="btn" id="notifBtn" onclick="enableNotifications()">Turn on</button>
+    </div>
+
+    <h3>Data on this device</h3>
+    <div class="setting-row">
+      <span class="note">Removes your weight and session history.</span>
+      <button type="button" class="btn danger" onclick="clearStoredData()">Delete data</button>
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="closeSettings()">Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="alertToast" role="alert" hidden>
+  <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+  <div class="toast-copy">
+    <div id="toastTitle"></div>
+    <div id="toastBody"></div>
+  </div>
+  <button id="toastClose" onclick="hideToast()" aria-label="Dismiss alert">
+    <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+  </button>
+</div>
 
 <script>
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -382,18 +609,81 @@ const CHAR_UUIDS = [
   'aa070000-1fb5-459e-8fcc-c5c9c331914b',
 ];
 
+// maxG is the top of each sensor's firmware calibration table
 const ZONES = [
-  { name: 'Heel',                   threshold: { warn: 2000, danger: 3500 } },
-  { name: 'Arch',                   threshold: { warn: 1200, danger: 2200 } },
-  { name: 'Metatarsal (Lateral)',   threshold: { warn: 1800, danger: 3200 } },
-  { name: 'Metatarsal (Medial)',    threshold: { warn: 1800, danger: 3200 } },
-  { name: 'Large Toe',              threshold: { warn: 1200, danger: 2200 } },
+  { name: 'Heel',             maxG: 18000, threshold: { warn: 2000, danger: 3500 } },
+  { name: 'Arch',             maxG:  9000, threshold: { warn: 1200, danger: 2200 } },
+  { name: 'Forefoot (outer)', maxG:  9000, threshold: { warn: 1800, danger: 3200 } },
+  { name: 'Forefoot (inner)', maxG:  9000, threshold: { warn: 1800, danger: 3200 } },
+  { name: 'Big toe',          maxG:  9000, threshold: { warn: 1200, danger: 2200 } },
 ];
 
+// Standard limits are treated as suiting a 70 kg adult. Lighter users get
+// proportionally lower limits. Heavier users keep the standard limits, because
+// body weight doesn't make skin more tolerant of pressure.
+const REFERENCE_WEIGHT_KG = 70;
+const MIN_LIMIT_SCALE     = 0.6;
+const MAX_LIMIT_SCALE     = 1;
+const MIN_WEIGHT_KG       = 20;
+const MAX_WEIGHT_KG       = 250;
+const LB_PER_KG           = 2.20462;
+
+const TEMP_HIGH_C      = 37.5;
+const TEMP_WARN_C      = 36.8;
+const TEMP_NORMAL_C    = 33.0;
+const TEMP_MIN_VALID_C = 10;    // firmware sends 0.0 until the sensor has been read
+const TEMP_MAX_VALID_C = 60;
+const TEMP_STUCK_MS    = 600000;
+
+const NO_LOAD_G          = 100;    // total across all sensors
+const NO_LOAD_DELAY_MS   = 5000;
+const STALE_DATA_MS      = 5000;   // firmware sends a reading every second
+const BALANCE_WINDOW     = 60;     // seconds of load used by the balance card
+const RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY_MS = 2000;
+
+const SESSION_SAVE_MS    = 30000;
+const SESSION_MIN_WORN_MS = 30000;
+const MAX_SESSIONS       = 20;
+
+const PROFILE_KEY  = 'solesense.profile';
+const SESSIONS_KEY = 'solesense.sessions';
+
+// Same discharge curve as the firmware's BATT_CURVE table
+const BATT_CURVE = [
+  [3.00,   0], [3.30,   5], [3.50,  10], [3.60,  20], [3.70,  40], [3.75,  50],
+  [3.80,  60], [3.85,  70], [3.95,  80], [4.05,  90], [4.20, 100],
+];
+
+const HEAT_STOPS = [
+  [0.00, [47,  111, 176]],
+  [0.35, [26,  163, 122]],
+  [0.60, [224, 165,  38]],
+  [1.00, [216,  52,  44]],
+];
+
+// 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'lost'
+let mode = 'idle';
+let demoTimer = null;
 let bleDevice = null, bleServer = null;
+let listeningDevice = null;
+let reconnectToken = 0;
+let connectionError = null;
+
 let fsrValues = [0, 0, 0, 0, 0];
 let tempValue = null;
-let connected = false;
+let tempChangedAt = 0;
+let battery = null;
+let lastDataAt = 0;
+let lastCycleAt = 0;
+let noLoadSince = 0;
+let loadHistory = [];
+let renderQueued = false;
+
+let profile  = loadProfile();
+let sessions = loadJSON(SESSIONS_KEY, []);
+let session  = null;
+let lastSessionSave = 0;
 
 // ── Sustained pressure alert state ───────────────────────
 const ALERT_DURATION_MS   = 30000;  // fire after 30s of sustained danger
@@ -401,41 +691,120 @@ const ALERT_COOLDOWN_MS   = 60000;  // silence same zone for 60s after alert
 let   zoneHighSince       = [0, 0, 0, 0, 0];  // when zone first went danger
 let   zoneAlertFiredAt    = [0, 0, 0, 0, 0];  // when last alert fired per zone
 let   audioCtx            = null;
-let   notifPermission     = 'default';
 
-function pressureColor(grams, maxG = 4500) {
-  const t = Math.min(grams / maxG, 1);
-  const stops = [
-    [0.00, [30,  58, 138]],
-    [0.30, [37,  99, 235]],
-    [0.55, [22, 163,  74]],
-    [0.78, [202,138,   4]],
-    [1.00, [220,  38,  38]],
-  ];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [t0, c0] = stops[i];
-    const [t1, c1] = stops[i + 1];
+// ── Browser storage ──────────────────────────────────────
+function loadJSON(key, fallback) {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function saveJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('[STORAGE]', e);
+  }
+}
+
+function loadProfile() {
+  const stored = loadJSON(PROFILE_KEY, {});
+  const weightKg = Number(stored.weightKg);
+  return {
+    weightKg: weightKg >= MIN_WEIGHT_KG && weightKg <= MAX_WEIGHT_KG ? weightKg : null,
+    unit: stored.unit === 'lb' ? 'lb' : 'kg',
+  };
+}
+
+// ── Personal limits ──────────────────────────────────────
+function limitScale() {
+  if (profile.weightKg === null) return 1;
+  const scale = profile.weightKg / REFERENCE_WEIGHT_KG;
+  return Math.min(MAX_LIMIT_SCALE, Math.max(MIN_LIMIT_SCALE, scale));
+}
+
+function limitsFor(zone) {
+  const scale = limitScale();
+  return {
+    warn:   Math.round(zone.threshold.warn   * scale / 50) * 50,
+    danger: Math.round(zone.threshold.danger * scale / 50) * 50,
+  };
+}
+
+function zoneLevel(grams, zone) {
+  const limits = limitsFor(zone);
+  if (grams >= limits.danger) return 'danger';
+  if (grams >= limits.warn)   return 'warn';
+  return 'ok';
+}
+
+function atSensorLimit(grams, zone) {
+  return grams >= zone.maxG - 1;
+}
+
+function zoneTagText(grams, zone) {
+  if (atSensorLimit(grams, zone)) return 'Sensor limit';
+  const level = zoneLevel(grams, zone);
+  return level === 'danger' ? 'High' : level === 'warn' ? 'Elevated' : 'Normal';
+}
+
+function percentOfBodyWeight(grams) {
+  return profile.weightKg === null ? null : grams / (profile.weightKg * 10);
+}
+
+function formatKg(grams) {
+  return `${(grams / 1000).toFixed(1)} kg`;
+}
+
+function heatColor(grams, zone) {
+  const t = Math.min(grams / limitsFor(zone).danger, 1);
+  for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+    const [t0, c0] = HEAT_STOPS[i];
+    const [t1, c1] = HEAT_STOPS[i + 1];
     if (t <= t1) {
       const f = (t - t0) / (t1 - t0);
       return `rgb(${Math.round(c0[0]+f*(c1[0]-c0[0]))},${Math.round(c0[1]+f*(c1[1]-c0[1]))},${Math.round(c0[2]+f*(c1[2]-c0[2]))})`;
     }
   }
-  return 'rgb(220,38,38)';
+  return 'rgb(216,52,44)';
 }
 
-function zoneLevel(grams, zone) {
-  if (grams >= zone.threshold.danger) return 'danger';
-  if (grams >= zone.threshold.warn)   return 'warn';
-  return 'ok';
+// ── Battery ──────────────────────────────────────────────
+// The firmware sends a straight-line percentage, which can fall outside
+// 0–100. Recover the voltage from it, then read the LiPo discharge curve.
+function batteryVoltage(sentPercent) {
+  return 3.0 + (sentPercent / 100) * 1.2;
 }
-function zoneTagText(level) {
-  return level === 'danger' ? 'High' : level === 'warn' ? 'Elevated' : 'Normal';
+
+function batteryPercent(sentPercent) {
+  const v = batteryVoltage(sentPercent);
+  const last = BATT_CURVE.length - 1;
+  if (v <= BATT_CURVE[0][0])    return 0;
+  if (v >= BATT_CURVE[last][0]) return 100;
+  for (let i = 0; i < last; i++) {
+    const [v0, soc0] = BATT_CURVE[i];
+    const [v1, soc1] = BATT_CURVE[i + 1];
+    if (v <= v1) return soc0 + ((v - v0) / (v1 - v0)) * (soc1 - soc0);
+  }
+  return 0;
 }
 
 // ── Web Audio beep (no external files needed) ─────────────
-function playBeep() {
+function prepareAudio() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {
+    console.warn('[BEEP] Audio error:', e);
+  }
+}
+
+function playBeep() {
+  try {
+    prepareAudio();
     const now = audioCtx.currentTime;
 
     // Three short beeps: 880Hz → 660Hz → 880Hz
@@ -464,80 +833,56 @@ function playBeep() {
 }
 
 // ── Push / in-app notification ────────────────────────────
-function fireAlert(zoneIndex) {
-  const zoneName = ZONES[zoneIndex].name;
-  const title    = '⚠️ Sustained High Pressure';
-  const body     = `${zoneName} has been under high pressure for over 30 seconds. Reposition your foot.`;
+function notifyInBackground(title, body, tag) {
+  if (demoTimer || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted' || !document.hidden) return;
 
-  // In-app toast (always works)
+  const options = { body, tag, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', vibrate: [200, 100, 200] };
+
+  // Android Chrome only allows notifications shown through the service worker
+  const swReady = 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve();
+  swReady
+    .then(reg => reg ? reg.showNotification(title, options) : new Notification(title, options))
+    .catch(e => console.warn('[NOTIF]', e));
+}
+
+function raiseAlert(title, body, tag) {
   showToast(title, body);
-
-  // Web Push notification (if permission granted and page not focused)
-  if (notifPermission === 'granted' && document.hidden) {
-    try {
-      new Notification(title, {
-        body,
-        icon:    'icons/icon-192.png',
-        badge:   'icons/icon-192.png',
-        vibrate: [200, 100, 200],
-        tag:     `zone-${zoneIndex}`,      // replaces previous notif for same zone
-      });
-    } catch (e) {
-      console.warn('[NOTIF]', e);
-    }
-  }
-
+  notifyInBackground(title, body, tag);
   playBeep();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+}
+
+function fireAlert(zoneIndex) {
+  const zone  = ZONES[zoneIndex];
+  const grams = fsrValues[zoneIndex];
+  const bw    = percentOfBodyWeight(grams);
+  const share = bw === null ? '' : ` (about ${Math.round(bw)}% of your body weight)`;
+  const body  = `${zone.name} has been under high pressure${share} for over 30 seconds. Reposition your foot.`;
+
+  if (session) session.alerts += 1;
+  raiseAlert('Sustained high pressure', body, `zone-${zoneIndex}`);
 }
 
 // ── In-app toast banner ───────────────────────────────────
+let toastTimer = null;
+
 function showToast(title, body) {
-  let toast = document.getElementById('alertToast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'alertToast';
-    toast.style.cssText = `
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: #1f2733; border: 1px solid rgba(248,81,73,0.5);
-      color: #e6edf3; border-radius: 12px; padding: 14px 18px;
-      max-width: 340px; width: calc(100% - 32px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      animation: slideUp 0.3s ease;
-    `;
-    document.body.appendChild(toast);
-
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideUp {
-        from { opacity: 0; transform: translateX(-50%) translateY(16px); }
-        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  toast.innerHTML = `
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <span style="font-size:1.2rem;flex-shrink:0;">⚠️</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;font-size:0.85rem;color:#f85149;">${title}</div>
-        <div style="font-size:0.78rem;color:#7d8590;margin-top:3px;line-height:1.4;">${body}</div>
-      </div>
-      <button onclick="document.getElementById('alertToast').style.display='none'"
-        style="background:none;border:none;color:#7d8590;cursor:pointer;font-size:1rem;flex-shrink:0;padding:0;">✕</button>
-    </div>`;
-  toast.style.display = 'block';
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastBody').textContent  = body;
+  document.getElementById('alertToast').hidden = false;
 
   // Auto-dismiss after 8 seconds
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 8000);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 8000);
+}
+
+function hideToast() {
+  document.getElementById('alertToast').hidden = true;
 }
 
 // ── Check each zone for sustained danger ──────────────────
-function checkSustainedPressure() {
-  const now = Date.now();
-
+function checkSustainedPressure(now) {
   fsrValues.forEach((g, i) => {
     const level = zoneLevel(g, ZONES[i]);
 
@@ -559,339 +904,663 @@ function checkSustainedPressure() {
   });
 }
 
-function buildHeatmap() {
-  const body = document.getElementById('heatmapBody');
-  body.innerHTML = `
-    <div class="foot-svg-container">
-      <svg id="footSVG" viewBox="0 0 240 400" xmlns="http://www.w3.org/2000/svg">
-        <path d="
-          M 100,55
-          C 115,55 130,58 142,65
-          C 152,70 162,80 164,95
-          C 166,110 158,125 152,138
-          C 144,155 138,172 136,190
-          C 134,215 142,240 146,265
-          C 150,290 152,315 144,340
-          C 138,360 125,375 105,378
-          C 85,380 68,370 58,350
-          C 48,328 50,300 54,272
-          C 58,245 65,215 64,185
-          C 63,155 52,130 54,105
-          C 56,80 75,55 100,55
-          Z"
-          fill="#1f2733" stroke="#30363d" stroke-width="1.5" stroke-linejoin="round"/>
-
-        <path d="M 80,50 C 72,48 68,36 72,22 C 76,8 92,5 100,12 C 108,20 106,36 100,46 C 96,52 86,52 80,50 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
-        <path d="M 112,52 C 109,50 108,40 110,28 C 112,16 122,14 126,22 C 130,30 126,44 122,50 C 120,53 115,54 112,52 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
-        <path d="M 131,56 C 128,54 128,46 130,36 C 132,26 141,25 144,32 C 147,39 144,50 141,55 C 139,57 134,58 131,56 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
-        <path d="M 149,65 C 146,63 146,56 148,48 C 150,40 157,39 160,45 C 163,51 160,60 157,64 C 155,66 151,67 149,65 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
-        <path d="M 165,77 C 162,75 162,70 164,63 C 166,56 172,56 175,61 C 178,66 175,74 172,77 C 170,79 167,79 165,77 Z" fill="#1f2733" stroke="#30363d" stroke-width="1.2"/>
-
-        <path id="zone0" class="fsr-zone" d="M 105,295 C 130,295 138,315 135,335 C 132,355 120,365 105,365 C 90,365 78,355 75,335 C 72,315 80,295 105,295 Z" fill="#1e3a5f"/>
-        <path id="zone1" class="fsr-zone" d="M 100,180 C 115,180 120,205 115,235 C 110,265 100,275 90,275 C 80,275 80,250 85,225 C 90,200 85,180 100,180 Z" fill="#1e3a5f"/>
-        <path id="zone2" class="fsr-zone" d="M 135,105 C 150,110 155,125 148,140 C 141,155 125,155 118,145 C 111,135 120,100 135,105 Z" fill="#1e3a5f"/>
-        <path id="zone3" class="fsr-zone" d="M 90,95 C 110,95 118,110 115,125 C 112,140 95,150 80,140 C 65,130 70,95 90,95 Z" fill="#1e3a5f"/>
-        <path id="zone4" class="fsr-zone" d="M 86,42 C 94,42 98,32 94,20 C 90,8 82,10 78,18 C 74,26 78,42 86,42 Z" fill="#1e3a5f"/>
-
-        <text x="105" y="338" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">1</text>
-        <text x="102" y="232" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">2</text>
-        <text x="134" y="133" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">3</text>
-        <text x="91"  y="124" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">4</text>
-        <text x="86"  y="26"  text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="Inter,sans-serif">5</text>
-      </svg>
-    </div>
-    <div class="zone-list" id="zoneList">
-      ${ZONES.map((z, i) => `
-        <div class="zone-row" id="zr${i}">
-          <div class="zone-swatch" id="zsw${i}" style="background:#1e3a5f"></div>
-          <div class="zone-info">
-            <div class="zone-name">${i+1}. ${z.name}</div>
-            <div class="zone-val" id="zv${i}">— g</div>
-          </div>
-          <span class="zone-tag ok" id="zt${i}">—</span>
-        </div>
-      `).join('')}
-    </div>`;
-  document.getElementById('legendWrap').style.display = 'flex';
-  document.getElementById('hmBadge').textContent = 'LIVE';
-  document.getElementById('hmBadge').classList.add('live');
+function resetAlertClocks() {
+  zoneHighSince    = [0,0,0,0,0];
+  zoneAlertFiredAt = [0,0,0,0,0];
 }
 
-function updateHeatmap() {
-  fsrValues.forEach((g, i) => {
-    const color = pressureColor(g);
-    const level = zoneLevel(g, ZONES[i]);
-    const zone  = document.getElementById(`zone${i}`);
-    if (zone) zone.setAttribute('fill', color);
-    const sw = document.getElementById(`zsw${i}`);
-    if (sw) sw.style.background = color;
-    const vEl = document.getElementById(`zv${i}`);
-    if (vEl) vEl.textContent = `${Math.round(g)} g`;
-    const tEl = document.getElementById(`zt${i}`);
-    if (tEl) { tEl.textContent = zoneTagText(level); tEl.className = `zone-tag ${level}`; }
-    const rv = document.getElementById(`rv${i}`);
-    if (rv) rv.textContent = `${Math.round(g)} g`;
+// ── Readings ──────────────────────────────────────────────
+function totalLoad() {
+  return fsrValues.reduce((sum, g) => sum + g, 0);
+}
+
+function isNoLoad(now) {
+  return noLoadSince !== 0 && now - noLoadSince >= NO_LOAD_DELAY_MS;
+}
+
+function isStale(now) {
+  return mode === 'connected' && now - lastDataAt > STALE_DATA_MS;
+}
+
+function handleFsr(index, val) {
+  fsrValues[index] = val;
+  lastDataAt = Date.now();
+  // The firmware sends the zones in order, so the last one ends a cycle
+  if (index === ZONES.length - 1) onCycleComplete();
+}
+
+function handleTemp(val) {
+  const now = Date.now();
+  if (val !== tempValue) tempChangedAt = now;
+  tempValue  = val;
+  lastDataAt = now;
+  if (session && isTempUsable() && (session.peakTemp === null || val > session.peakTemp)) session.peakTemp = val;
+  queueRender();
+}
+
+function handleBattery(val) {
+  battery = batteryPercent(val);
+  lastDataAt = Date.now();
+  queueRender();
+}
+
+function onCycleComplete() {
+  const now   = Date.now();
+  const delta = lastCycleAt ? Math.min(now - lastCycleAt, STALE_DATA_MS) : 0;
+  lastCycleAt = now;
+
+  const total = totalLoad();
+  const worn  = total >= NO_LOAD_G;
+  if (worn) {
+    noLoadSince = 0;
+    loadHistory.push(fsrValues.slice());
+    if (loadHistory.length > BALANCE_WINDOW) loadHistory.shift();
+  } else if (noLoadSince === 0) {
+    noLoadSince = now;
+  }
+
+  checkSustainedPressure(now);
+  updateSession(delta, worn);
+  queueRender();
+}
+
+function resetReadings() {
+  fsrValues = [0,0,0,0,0];
+  tempValue = null;
+  tempChangedAt = 0;
+  battery = null;
+  lastCycleAt = 0;
+  noLoadSince = 0;
+  loadHistory = [];
+  resetAlertClocks();
+}
+
+// ── Session log ───────────────────────────────────────────
+function startSession() {
+  const now = Date.now();
+  session = {
+    id: now, start: now, activeMs: 0, wornMs: 0, highMs: 0, alerts: 0,
+    peaks: [0,0,0,0,0], peakTemp: null,
+  };
+  lastSessionSave = now;
+}
+
+function updateSession(delta, worn) {
+  if (!session) return;
+  session.activeMs += delta;
+  if (worn) session.wornMs += delta;
+  if (fsrValues.some((g, i) => zoneLevel(g, ZONES[i]) === 'danger')) session.highMs += delta;
+  fsrValues.forEach((g, i) => { session.peaks[i] = Math.max(session.peaks[i], g); });
+
+  const now = Date.now();
+  if (now - lastSessionSave >= SESSION_SAVE_MS) {
+    lastSessionSave = now;
+    saveSession();
+  }
+}
+
+function saveSession() {
+  if (!session || demoTimer || session.wornMs < SESSION_MIN_WORN_MS) return;
+  sessions = [{ ...session }, ...sessions.filter(s => s.id !== session.id)].slice(0, MAX_SESSIONS);
+  saveJSON(SESSIONS_KEY, sessions);
+  renderHistory();
+}
+
+function endSession() {
+  saveSession();
+  session = null;
+}
+
+function formatDuration(ms) {
+  const totalSeconds = Math.round(ms / 1000);
+  if (totalSeconds < 60) return `${totalSeconds} s`;
+  const totalMinutes = Math.round(totalSeconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+  return `${Math.floor(totalMinutes / 60)} h ${totalMinutes % 60} min`;
+}
+
+function formatSessionDate(timestamp) {
+  return new Date(timestamp).toLocaleString(undefined, {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
   });
-  checkSustainedPressure();
 }
 
-function evaluateStatus() {
-  const maxG      = Math.max(...fsrValues);
-  const levels    = fsrValues.map((g, i) => zoneLevel(g, ZONES[i]));
-  const hasDanger = levels.includes('danger');
-  const hasWarn   = levels.includes('warn');
-  const highTemp  = tempValue !== null && tempValue >= 37.5;
-  const warnTemp  = tempValue !== null && tempValue >= 36.8;
+// ── Rendering ─────────────────────────────────────────────
+function buildZoneList() {
+  document.getElementById('zoneList').innerHTML = ZONES.map((z, i) => `
+    <div class="zone-row">
+      <div class="zone-head">
+        <div class="zone-name"><b>${i+1}</b>${z.name}</div>
+        <span class="zone-tag" id="zt${i}">—</span>
+      </div>
+      <div class="zone-bar"><div class="zone-fill" id="zb${i}"></div></div>
+      <div class="zone-val" id="zv${i}">— g</div>
+    </div>
+  `).join('');
+}
 
-  let cls = 'normal', icon = '✓', text = '', sub = '';
+function renderZones() {
+  const hasData = mode !== 'idle' && mode !== 'connecting';
+  const svg = document.getElementById('footSVG');
+
+  fsrValues.forEach((g, i) => {
+    const zone   = ZONES[i];
+    const limits = limitsFor(zone);
+    const color  = heatColor(g, zone);
+    const level  = zoneLevel(g, zone);
+
+    svg.style.setProperty(`--heat-${i}`, color);
+    document.getElementById(`zone${i}`).setAttribute('opacity', hasData ? Math.min(0.2 + (g / limits.danger) * 0.8, 1) : 0);
+
+    const bar = document.getElementById(`zb${i}`);
+    bar.style.width      = hasData ? `${Math.min((g / limits.danger) * 100, 100)}%` : '0';
+    bar.style.background = color;
+
+    const tag = document.getElementById(`zt${i}`);
+    tag.textContent = hasData ? zoneTagText(g, zone) : '—';
+    tag.className   = hasData ? `zone-tag ${level}` : 'zone-tag';
+
+    document.getElementById(`zv${i}`).textContent = !hasData ? '— g'
+      : atSensorLimit(g, zone) ? `${Math.round(g)} g or more`
+      : `${Math.round(g)} g of ${limits.danger} g limit`;
+  });
+
+  const badge = document.getElementById('hmBadge');
+  badge.textContent = limitScale() < 1 ? 'Personal limits' : 'Standard limits';
+  badge.classList.toggle('live', limitScale() < 1);
+}
+
+function tempState(now) {
+  if (tempValue === null) return 'none';
+  if (tempValue < TEMP_MIN_VALID_C || tempValue >= TEMP_MAX_VALID_C) return 'fault';
+  if (now - tempChangedAt >= TEMP_STUCK_MS) return 'stuck';
+  if (tempValue >= TEMP_HIGH_C) return 'danger';
+  if (tempValue >= TEMP_WARN_C) return 'warn';
+  return tempValue >= TEMP_NORMAL_C ? 'normal' : 'cool';
+}
+
+function isTempUsable() {
+  return tempValue !== null && tempValue >= TEMP_MIN_VALID_C && tempValue < TEMP_MAX_VALID_C;
+}
+
+function renderTemp(now) {
+  const state = tempState(now);
+  const text  = isTempUsable() ? tempValue.toFixed(1) : '--.-';
+  const copy  = {
+    none:   ['No data', 'Connect your insole to read foot temperature'],
+    fault:  ['Check sensor', "The temperature sensor isn't giving a valid reading."],
+    stuck:  ['Check sensor', "This reading hasn't changed for 10 minutes, so the sensor may have stopped."],
+    danger: ['High temperature', 'Above the safe limit. This may indicate inflammation.'],
+    warn:   ['Mildly elevated', 'Slightly above normal. Watch for any further rise.'],
+    normal: ['Normal', 'Within the normal range for the sole of the foot.'],
+    cool:   ['Cool', 'Below the typical range. Check the insole is being worn.'],
+  }[state];
+
+  document.getElementById('tempVal').textContent   = text;
+  document.getElementById('tempLabel').textContent = copy[0];
+  document.getElementById('tempDesc').textContent  = copy[1];
+  const cls = state === 'danger' || state === 'fault' ? 'danger' : state === 'warn' || state === 'stuck' ? 'warn' : '';
+  document.getElementById('tempLabel').className   = `temp-label ${cls}`;
+}
+
+function renderLoad() {
+  const bwLine = document.getElementById('bwLine');
+  const count  = loadHistory.length;
+  const seg    = (id, labelId, pct) => {
+    document.getElementById(id).style.width = pct === null ? '0' : `${pct}%`;
+    document.getElementById(labelId).textContent = pct === null ? '—' : `${Math.round(pct)}%`;
+  };
+
+  if (count === 0) {
+    seg('segFore', 'pctFore', null); seg('segMid', 'pctMid', null); seg('segRear', 'pctRear', null);
+    bwLine.textContent = 'No load measured yet';
+    return;
+  }
+
+  const avg   = ZONES.map((_, i) => loadHistory.reduce((sum, r) => sum + r[i], 0) / count);
+  const total = avg.reduce((sum, g) => sum + g, 0);
+  const fore  = avg[2] + avg[3] + avg[4];
+  seg('segFore', 'pctFore', (fore / total) * 100);
+  seg('segMid',  'pctMid',  (avg[1] / total) * 100);
+  seg('segRear', 'pctRear', (avg[0] / total) * 100);
+
+  const bw = percentOfBodyWeight(total);
+  bwLine.innerHTML = '';
+  const strong = document.createElement('strong');
+  strong.textContent = `${formatKg(total)} average`;
+  bwLine.append(strong, bw === null ? ' across all sensors' : ` across all sensors, about ${Math.round(bw)}% of your body weight`);
+}
+
+function renderSession() {
+  const cell = (id, text) => { document.getElementById(id).textContent = text; };
+  cell('statActive', session ? formatDuration(session.activeMs) : '—');
+  cell('statWorn',   session ? formatDuration(session.wornMs)   : '—');
+  cell('statHigh',   session ? formatDuration(session.highMs)   : '—');
+  cell('statAlerts', session ? String(session.alerts)           : '—');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  document.getElementById('historyEmpty').hidden = sessions.length > 0;
+  list.innerHTML = '';
+  sessions.slice(0, 5).forEach((s) => {
+    const peakIndex = s.peaks.indexOf(Math.max(...s.peaks));
+    const item = document.createElement('li');
+    const when = document.createElement('div');
+    when.textContent = formatSessionDate(s.start);
+    const detail = document.createElement('span');
+    detail.textContent = `${formatDuration(s.wornMs)} worn · peak ${formatKg(s.peaks[peakIndex])} at ${ZONES[peakIndex].name.toLowerCase()}`;
+    if (s.alerts > 0) {
+      const alerts = document.createElement('div');
+      alerts.className = 'has-alerts';
+      alerts.textContent = `${s.alerts} alert${s.alerts === 1 ? '' : 's'}`;
+      detail.append(alerts);
+    }
+    item.append(when, detail);
+    list.append(item);
+  });
+}
+
+function renderBattery() {
+  const badge = document.getElementById('battBadge');
+  badge.hidden = battery === null;
+  if (battery === null) return;
+  document.getElementById('battText').textContent = `${Math.round(battery)}%`;
+  badge.className = battery > 60 ? 'ok' : battery > 20 ? 'warn' : 'danger';
+  badge.setAttribute('aria-label', `Insole battery ${Math.round(battery)} percent`);
+}
+
+function pressureStatus() {
+  const levels = fsrValues.map((g, i) => zoneLevel(g, ZONES[i]));
+  return { hasDanger: levels.includes('danger'), hasWarn: levels.includes('warn') };
+}
+
+function peakZone() {
+  let peak = 0;
+  fsrValues.forEach((g, i) => {
+    if (g / limitsFor(ZONES[i]).danger > fsrValues[peak] / limitsFor(ZONES[peak]).danger) peak = i;
+  });
+  return peak;
+}
+
+function evaluateStatus(now) {
+  if (mode === 'idle')         return { cls: 'idle', icon: 'info', text: 'Not connected', sub: 'Connect your insole to start monitoring' };
+  if (mode === 'connecting')   return { cls: 'idle', icon: 'info', text: 'Connecting to insole…', sub: 'Make sure it is switched on and nearby. Enter the passkey if asked.' };
+  if (mode === 'reconnecting') return { cls: 'warn', icon: 'alert', text: 'Connection lost, reconnecting…', sub: 'Monitoring is paused. Keep the insole close to this device.' };
+  if (mode === 'lost')         return { cls: 'danger', icon: 'alert', text: connectionError ? 'Connection failed' : 'Connection lost', sub: connectionError || 'Monitoring has stopped. Select Connect to try again.' };
+  if (isStale(now))            return { cls: 'warn', icon: 'alert', text: 'No data from insole', sub: `Nothing received for ${Math.round((now - lastDataAt) / 1000)} s. Check the insole's battery and distance.` };
+
+  const { hasDanger, hasWarn } = pressureStatus();
+  const temp     = tempState(now);
+  const highTemp = temp === 'danger';
+  const warnTemp = temp === 'warn';
+  const peak     = peakZone();
+  const bw       = percentOfBodyWeight(fsrValues[peak]);
+  const bwText   = bw === null ? '' : `, about ${Math.round(bw)}% of your body weight`;
+  const limited  = fsrValues.some((g, i) => atSensorLimit(g, ZONES[i]));
+  const limitNote = limited ? ' A sensor is at its maximum reading, so the true load may differ.' : '';
 
   if (hasDanger && highTemp) {
-    cls = 'danger'; icon = '⚠';
-    text = 'High pressure & elevated temperature detected';
-    sub  = 'Potential diabetic foot risk — consider redistributing load and consulting a podiatrist';
-  } else if (hasDanger) {
-    cls = 'danger'; icon = '⚠';
-    text = 'High foot pressure detected';
-    sub  = `Peak load ${Math.round(maxG)} g — prolonged pressure may cause tissue damage`;
-  } else if (highTemp) {
-    cls = 'danger'; icon = '⚠';
-    text = 'High foot temperature';
-    sub  = `${tempValue.toFixed(1)} °C — elevated temperature may indicate inflammation`;
-  } else if (hasWarn && warnTemp) {
-    cls = 'warn'; icon = '◐';
-    text = 'Elevated pressure and mild temperature rise';
-    sub  = 'Monitor closely — stay within normal activity limits';
-  } else if (hasWarn) {
-    cls = 'warn'; icon = '◐';
-    text = 'Elevated pressure in one or more zones';
-    sub  = 'Consider adjusting footwear or activity level';
-  } else if (warnTemp) {
-    cls = 'warn'; icon = '◐';
-    text = 'Mild temperature elevation';
-    sub  = `${tempValue.toFixed(1)} °C — slightly above baseline, monitor over time`;
-  } else {
-    cls = 'normal'; icon = '✓';
-    text = 'Normal — all readings within range';
-    sub  = 'Pressure distribution and temperature look healthy';
+    return { cls: 'danger', icon: 'alert', text: 'High pressure and high temperature',
+      sub: `Reduce the load on your foot and contact your podiatrist if this continues.${limitNote}` };
   }
-
-  const banner = document.getElementById('statusBanner');
-  banner.className = cls;
-  document.getElementById('statusIcon').textContent = icon;
-  document.getElementById('statusText').textContent = text;
-  document.getElementById('statusSub').textContent  = sub;
+  if (hasDanger) {
+    return { cls: 'danger', icon: 'alert', text: 'High foot pressure',
+      sub: `${ZONES[peak].name}: ${formatKg(fsrValues[peak])}${bwText}. Prolonged pressure can damage tissue.${limitNote}` };
+  }
+  if (highTemp) {
+    return { cls: 'danger', icon: 'alert', text: 'High foot temperature',
+      sub: `${tempValue.toFixed(1)} °C. This may indicate inflammation.` };
+  }
+  if (hasWarn && warnTemp) {
+    return { cls: 'warn', icon: 'alert', text: 'Elevated pressure and temperature',
+      sub: 'Keep an eye on this and stay within your normal activity.' };
+  }
+  if (hasWarn) {
+    return { cls: 'warn', icon: 'alert', text: 'Elevated pressure',
+      sub: `${ZONES[peak].name}: ${formatKg(fsrValues[peak])}${bwText}. Consider adjusting your footwear or activity.` };
+  }
+  if (warnTemp) {
+    return { cls: 'warn', icon: 'alert', text: 'Mildly raised temperature',
+      sub: `${tempValue.toFixed(1)} °C. Keep an eye on this over time.` };
+  }
+  if (temp === 'fault' || temp === 'stuck') {
+    return { cls: 'warn', icon: 'alert', text: 'Check the temperature sensor',
+      sub: 'Temperature is not being monitored. Pressure monitoring continues.' };
+  }
+  if (isNoLoad(now)) {
+    return { cls: 'idle', icon: 'info', text: 'No load detected',
+      sub: "The insole isn't being worn, or your foot is off the ground." };
+  }
+  return { cls: 'normal', icon: 'check', text: 'All readings in range', sub: 'Pressure and temperature are within your limits.' };
 }
 
-function updateTemp(val) {
-  tempValue = val;
-  document.getElementById('tempVal').textContent  = val.toFixed(1);
-  document.getElementById('tempBadge').textContent = `${val.toFixed(1)} °C`;
-  document.getElementById('tempBadge').classList.add('live');
-  const circle = document.getElementById('tempCircle');
-  const label  = document.getElementById('tempLabel');
-  const desc   = document.getElementById('tempDesc');
-  if (val >= 37.5) {
-    circle.className  = 'temp-circle danger';
-    label.textContent = 'High temperature';
-    desc.textContent  = `${val.toFixed(1)} °C — above safe threshold. May indicate localised inflammation or infection risk.`;
-  } else if (val >= 36.8) {
-    circle.className  = 'temp-circle warn';
-    label.textContent = 'Mildly elevated';
-    desc.textContent  = `${val.toFixed(1)} °C — slightly above baseline. Monitor for further increase.`;
-  } else if (val >= 33.0) {
-    circle.className  = 'temp-circle';
-    label.textContent = 'Normal';
-    desc.textContent  = `${val.toFixed(1)} °C — within normal plantar temperature range.`;
-  } else {
-    circle.className  = 'temp-circle';
-    label.textContent = 'Cool';
-    desc.textContent  = `${val.toFixed(1)} °C — below typical range. Check sensor contact.`;
-  }
+function renderStatus(now) {
+  const status = evaluateStatus(now);
+  document.getElementById('statusBanner').className = `${status.cls} full`;
+  document.getElementById('statusIconUse').setAttribute('href', `#i-${status.icon}`);
+  document.getElementById('statusText').textContent = status.text;
+  document.getElementById('statusSub').textContent  = status.sub;
+  document.body.dataset.frozen = String(mode === 'reconnecting' || mode === 'lost' || isStale(now));
 }
 
-function updateBattery(val) {
-  const badge = document.getElementById('battBadge');
-  badge.style.display = '';
-  const icon = val > 60 ? '🔋' : val > 20 ? '🪫' : '⚠️';
-  badge.textContent = `${icon} ${val.toFixed(0)}%`;
-  badge.style.color       = val > 60 ? 'var(--accent)' : val > 20 ? 'var(--warn)' : 'var(--danger)';
-  badge.style.borderColor = val > 60 ? 'rgba(63,185,80,0.3)' : val > 20 ? 'rgba(210,153,34,0.3)' : 'rgba(248,81,73,0.3)';
+function renderConnection() {
+  const btn = document.getElementById('connectBtn');
+  const dot = document.getElementById('bleDot');
+  const live = mode === 'connected';
+  const labels = { idle: 'Connect', connecting: 'Connecting…', connected: demoTimer ? 'Exit demo' : 'Disconnect', reconnecting: 'Stop', lost: 'Connect' };
 
-  const cell = document.getElementById('battVal');
-  if (cell) {
-    cell.textContent = `${val.toFixed(1)}%`;
-    cell.className   = `raw-cell-val ${val > 60 ? 'batt-ok' : val > 20 ? 'batt-warn' : 'batt-danger'}`;
+  document.body.dataset.state = mode;
+  document.getElementById('btnLabel').textContent = labels[mode];
+  btn.classList.toggle('primary', mode === 'idle' || mode === 'lost');
+  btn.disabled = mode === 'connecting' || (mode !== 'connected' && !demoTimer && !navigator.bluetooth);
+  dot.classList.toggle('on', live);
+  dot.classList.toggle('pulse', mode === 'connecting' || mode === 'reconnecting');
+  document.getElementById('demoBtn').hidden   = mode !== 'idle';
+  document.getElementById('demoBadge').hidden = !demoTimer;
+}
+
+function renderProfile() {
+  document.getElementById('weightPrompt').hidden = profile.weightKg !== null;
+}
+
+function render() {
+  const now = Date.now();
+  renderConnection();
+  renderZones();
+  renderTemp(now);
+  renderLoad();
+  renderSession();
+  renderBattery();
+  renderStatus(now);
+}
+
+function queueRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  setTimeout(() => { renderQueued = false; render(); }, 50);
+}
+
+// ── Settings ──────────────────────────────────────────────
+function selectedUnit() {
+  return document.getElementById('unitLb').checked ? 'lb' : 'kg';
+}
+
+function formatWeight(kg, unit) {
+  if (kg === null) return '';
+  return (unit === 'lb' ? kg * LB_PER_KG : kg).toFixed(1).replace(/\.0$/, '');
+}
+
+function renderLimits() {
+  document.getElementById('limitsBody').innerHTML = ZONES.map((z) => {
+    const limits = limitsFor(z);
+    return `<tr><td>${z.name}</td><td>${limits.warn} g</td><td>${limits.danger} g</td></tr>`;
+  }).join('');
+}
+
+function renderNotificationSetting() {
+  const status = document.getElementById('notifStatus');
+  const btn    = document.getElementById('notifBtn');
+  const supported = 'Notification' in window;
+  const permission = supported ? Notification.permission : 'denied';
+  btn.hidden = permission !== 'default';
+  status.textContent = !supported ? "This browser doesn't support notifications."
+    : permission === 'granted' ? "On. You'll be alerted while the app is in the background."
+    : permission === 'denied'  ? 'Blocked. Allow notifications in your browser settings.'
+    : 'Get alerts while the app is in the background.';
+}
+
+function enableNotifications() {
+  Notification.requestPermission().then(renderNotificationSetting);
+}
+
+function openSettings() {
+  document.getElementById(profile.unit === 'lb' ? 'unitLb' : 'unitKg').checked = true;
+  document.getElementById('weightInput').value = formatWeight(profile.weightKg, profile.unit);
+  document.getElementById('weightError').hidden = true;
+  renderLimits();
+  renderNotificationSetting();
+  document.getElementById('settingsDialog').showModal();
+}
+
+function closeSettings() {
+  document.getElementById('settingsDialog').close();
+}
+
+function saveSettings(e) {
+  e.preventDefault();
+  const unit  = selectedUnit();
+  const raw   = document.getElementById('weightInput').value.trim();
+  const error = document.getElementById('weightError');
+
+  let weightKg = null;
+  if (raw !== '') {
+    const value = parseFloat(raw);
+    weightKg = unit === 'lb' ? value / LB_PER_KG : value;
+    if (!(weightKg >= MIN_WEIGHT_KG && weightKg <= MAX_WEIGHT_KG)) {
+      const min = formatWeight(MIN_WEIGHT_KG, unit), max = formatWeight(MAX_WEIGHT_KG, unit);
+      error.textContent = `Enter a weight between ${min} and ${max} ${unit}.`;
+      error.hidden = false;
+      return;
+    }
   }
+
+  profile = { weightKg, unit };
+  saveJSON(PROFILE_KEY, profile);
+  resetAlertClocks();
+  renderProfile();
+  render();
+  closeSettings();
+}
+
+function convertWeightField() {
+  const input = document.getElementById('weightInput');
+  const value = parseFloat(input.value);
+  if (isNaN(value)) return;
+  const unit = selectedUnit();
+  const kg = unit === 'lb' ? value : value / LB_PER_KG;
+  input.value = formatWeight(kg, unit);
+}
+
+function clearStoredData() {
+  if (!confirm('Delete your weight and session history from this device?')) return;
+  try {
+    localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem(SESSIONS_KEY);
+  } catch (e) {
+    console.warn('[STORAGE]', e);
+  }
+  profile  = loadProfile();
+  sessions = [];
+  renderProfile();
+  renderHistory();
+  render();
+  closeSettings();
+}
+
+// ── Connection ────────────────────────────────────────────
+function setMode(next) {
+  mode = next;
+  render();
 }
 
 function decode(event) {
   return new TextDecoder().decode(event.target.value).trim();
 }
 
+function subscribe(ch, onValue) {
+  ch.addEventListener('characteristicvaluechanged', (e) => {
+    const val = parseFloat(decode(e));
+    if (!isNaN(val)) onValue(val);
+  });
+  return ch.startNotifications();
+}
+
+async function openGatt() {
+  bleServer = await bleDevice.gatt.connect();
+  const service = await bleServer.getPrimaryService(SERVICE_UUID);
+
+  for (let i = 0; i < ZONES.length; i++) {
+    const ch = await service.getCharacteristic(CHAR_UUIDS[i]);
+    await subscribe(ch, val => handleFsr(i, val));
+  }
+
+  const tempCh = await service.getCharacteristic(CHAR_UUIDS[5]);
+  await subscribe(tempCh, handleTemp);
+
+  try {
+    const batCh = await service.getCharacteristic(CHAR_UUIDS[6]);
+    await subscribe(batCh, handleBattery);
+  } catch (err) {
+    console.warn('[BLE] Battery characteristic not available:', err.message);
+  }
+}
+
 async function toggleBLE() {
-  if (!navigator.bluetooth) {
-    document.getElementById('noBleWarning').style.display = 'block';
-    return;
-  }
-  if (connected) { disconnect(); return; }
+  prepareAudio();
+  if (demoTimer) { stopDemo(); return; }
+  if (mode === 'connected' || mode === 'reconnecting') { disconnect(); return; }
   await connectBLE();
-}
-
-function setConnectingState() {
-  const btn = document.getElementById('connectBtn');
-  btn.className = 'connecting';
-  btn.disabled  = true;
-  document.getElementById('bleDot').classList.add('pulse');
-  document.getElementById('btnLabel').textContent   = 'Connecting…';
-  document.getElementById('statusBanner').className = 'idle';
-  document.getElementById('statusText').textContent  = 'Connecting to device…';
-  document.getElementById('statusSub').textContent   = 'Make sure the insole is powered on and nearby';
-}
-
-function setConnectedState() {
-  connected = true;
-  const btn = document.getElementById('connectBtn');
-  btn.className = 'connected';
-  btn.disabled  = false;
-  document.getElementById('bleDot').classList.remove('pulse');
-  document.getElementById('btnLabel').textContent    = 'Disconnect';
-  document.getElementById('rawBadge').style.display  = '';
-  buildHeatmap();
-
-  // Request notification permission (needs user gesture — Connect button qualifies)
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then(p => {
-      notifPermission = p;
-      console.log('[NOTIF] Permission:', p);
-    });
-  } else if ('Notification' in window) {
-    notifPermission = Notification.permission;
-  }
-}
-
-function setDisconnectedState() {
-  connected = false;
-  fsrValues = [0,0,0,0,0];
-  tempValue = null;
-  zoneHighSince    = [0,0,0,0,0];
-  zoneAlertFiredAt = [0,0,0,0,0];
-
-  const btn = document.getElementById('connectBtn');
-  btn.className = '';
-  btn.disabled  = false;
-  document.getElementById('bleDot').classList.remove('pulse');
-  document.getElementById('bleDot').style.background = '';
-  document.getElementById('btnLabel').textContent    = 'Connect';
-  document.getElementById('rawBadge').style.display  = 'none';
-  document.getElementById('battBadge').style.display = 'none';
-
-  document.getElementById('hmBadge').textContent = '— —';
-  document.getElementById('hmBadge').classList.remove('live');
-  document.getElementById('legendWrap').style.display = 'none';
-  document.getElementById('heatmapBody').innerHTML = `
-    <div class="idle-msg">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <ellipse cx="12" cy="14" rx="6" ry="8"/>
-        <path d="M9 6c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
-      </svg>
-      Awaiting sensor data
-    </div>`;
-
-  document.getElementById('tempVal').textContent   = '--.-';
-  document.getElementById('tempCircle').className  = 'temp-circle';
-  document.getElementById('tempLabel').textContent  = 'No data';
-  document.getElementById('tempDesc').textContent   = 'Connect device to read foot temperature';
-  document.getElementById('tempBadge').textContent  = '— —';
-  document.getElementById('tempBadge').classList.remove('live');
-
-  for (let i = 0; i < 5; i++) {
-    const rv = document.getElementById(`rv${i}`);
-    if (rv) rv.textContent = '—';
-  }
-  const bv = document.getElementById('battVal');
-  if (bv) { bv.textContent = '—'; bv.className = 'raw-cell-val'; }
-
-  document.getElementById('statusBanner').className = 'idle';
-  document.getElementById('statusIcon').textContent  = '○';
-  document.getElementById('statusText').textContent  = 'Not connected';
-  document.getElementById('statusSub').textContent   = 'Connect your insole device to start monitoring';
 }
 
 async function connectBLE() {
   try {
-    setConnectingState();
+    connectionError = null;
+    resetReadings();
+    setMode('connecting');
 
     bleDevice = await navigator.bluetooth.requestDevice({
       filters: [{ services: [SERVICE_UUID] }]
     });
 
-    bleDevice.addEventListener('gattserverdisconnected', () => {
-      console.log('[BLE] Disconnected');
-      setDisconnectedState();
-    });
-
-    bleServer = await bleDevice.gatt.connect();
-    const service = await bleServer.getPrimaryService(SERVICE_UUID);
-
-    for (let i = 0; i < 5; i++) {
-      const ch  = await service.getCharacteristic(CHAR_UUIDS[i]);
-      await ch.startNotifications();
-      const idx = i;
-      ch.addEventListener('characteristicvaluechanged', (e) => {
-        const val = parseFloat(decode(e));
-        if (!isNaN(val)) {
-          fsrValues[idx] = val;
-          updateHeatmap();
-          evaluateStatus();
-        }
-      });
+    if (listeningDevice !== bleDevice) {
+      bleDevice.addEventListener('gattserverdisconnected', onDeviceDisconnected);
+      listeningDevice = bleDevice;
     }
 
-    const tempCh = await service.getCharacteristic(CHAR_UUIDS[5]);
-    await tempCh.startNotifications();
-    tempCh.addEventListener('characteristicvaluechanged', (e) => {
-      const val = parseFloat(decode(e));
-      if (!isNaN(val)) { updateTemp(val); evaluateStatus(); }
-    });
+    await openGatt();
 
-    try {
-      const batCh = await service.getCharacteristic(CHAR_UUIDS[6]);
-      await batCh.startNotifications();
-      batCh.addEventListener('characteristicvaluechanged', (e) => {
-        const val = parseFloat(decode(e));
-        if (!isNaN(val)) updateBattery(val);
-      });
-    } catch (err) {
-      console.warn('[BLE] Battery characteristic not available:', err.message);
+    lastDataAt = Date.now();
+    tempChangedAt = lastDataAt;
+    startSession();
+    setMode('connected');
+
+    // Permission may already be settled; the Settings button covers the rest
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(e => console.warn('[NOTIF]', e));
     }
-
-    setConnectedState();
 
   } catch (err) {
     console.error('[BLE] Error:', err);
-    setDisconnectedState();
-    if (err.name !== 'NotFoundError') {
-      document.getElementById('statusText').textContent  = 'Connection failed';
-      document.getElementById('statusSub').textContent   = err.message || 'Check device power and proximity';
-      document.getElementById('statusBanner').className  = 'warn';
+    if (err.name === 'NotFoundError') {
+      setMode('idle');
+    } else {
+      connectionError = err.message || 'Check that the insole is on and nearby.';
+      setMode('lost');
     }
   }
 }
 
-function disconnect() {
-  if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
-  else setDisconnectedState();
+function onDeviceDisconnected() {
+  console.log('[BLE] Disconnected');
+  if (mode !== 'connected') return;
+  resetAlertClocks();
+  setMode('reconnecting');
+  reconnect();
 }
 
-window.addEventListener('load', () => {
-  if (!navigator.bluetooth) {
-    document.getElementById('noBleWarning').style.display = 'block';
-    document.getElementById('connectBtn').disabled = true;
+async function reconnect() {
+  const token = ++reconnectToken;
+
+  for (let attempt = 1; attempt <= RECONNECT_ATTEMPTS; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, RECONNECT_DELAY_MS));
+    if (token !== reconnectToken) return;
+    try {
+      await openGatt();
+      if (token !== reconnectToken) { bleDevice.gatt.disconnect(); return; }
+      lastDataAt = Date.now();
+      lastCycleAt = 0;
+      setMode('connected');
+      return;
+    } catch (err) {
+      console.warn(`[BLE] Reconnect attempt ${attempt} failed:`, err.message);
+    }
   }
+
+  endSession();
+  setMode('lost');
+  raiseAlert('Monitoring stopped', "The insole has disconnected and couldn't be reached.", 'connection');
+}
+
+function disconnect() {
+  reconnectToken++;
+  endSession();
+  resetReadings();
+  setMode('idle');
+  if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+}
+
+// ── Demo mode ─────────────────────────────────────────────
+// Feeds simulated readings through the same handlers as the insole. Nothing
+// from a demo is saved to the session history.
+const DEMO_SCENES = [
+  { seconds: 15, grams: [1500,  300, 1000, 1100,  400], temp: 34.6 },   // standing
+  { seconds: 40, grams: [3900,  500,  600,  700,  200], temp: 35.4 },   // heel loaded
+  { seconds: 12, grams: [1900,  500, 1900, 1700, 1300], temp: 36.9 },   // leaning forward
+  { seconds: 10, grams: [   0,    0,    0,    0,    0], temp: 36.2 },   // foot lifted
+];
+
+function startDemo() {
+  prepareAudio();
+  connectionError = null;
+  resetReadings();
+  let tick = 0;
+  const duration = DEMO_SCENES.reduce((sum, s) => sum + s.seconds, 0);
+
+  const step = () => {
+    let t = tick++ % duration;
+    const scene = DEMO_SCENES.find((s) => { t -= s.seconds; return t < 0; });
+    scene.grams.forEach((g, i) => handleFsr(i, g === 0 ? 0 : g * (0.96 + Math.random() * 0.08)));
+    handleTemp(Math.round((scene.temp + Math.random() * 0.1) * 10) / 10);
+    handleBattery(62);
+  };
+
+  demoTimer = setInterval(step, 1000);
+  lastDataAt = Date.now();
+  tempChangedAt = lastDataAt;
+  startSession();
+  setMode('connected');
+  step();
+}
+
+function stopDemo() {
+  clearInterval(demoTimer);
+  demoTimer = null;
+  session = null;
+  resetReadings();
+  setMode('idle');
+}
+
+// ── Startup ───────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildZoneList();
+  renderProfile();
+  renderHistory();
+  render();
+
+  if (!navigator.bluetooth) {
+    document.getElementById('noBleWarning').hidden = false;
+  }
+
+  document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+  document.querySelectorAll('input[name="unit"]').forEach(el => el.addEventListener('change', convertWeightField));
+
+  // Keeps the banner and session clock honest if data stops arriving
+  setInterval(() => { if (mode === 'connected') render(); }, 1000);
 
   // Register service worker for PWA installability
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('sw.js')
       .then(reg => console.log('[SW] Registered, scope:', reg.scope))
       .catch(err => console.warn('[SW] Registration failed:', err));
   }
