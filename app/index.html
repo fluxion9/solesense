@@ -5,13 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SoleSense — Insole Monitor</title>
 <link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f7f8"/>
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1518"/>
+<meta name="theme-color" data-scheme="light" media="(prefers-color-scheme: light)" content="#f4f7f8"/>
+<meta name="theme-color" data-scheme="dark" media="(prefers-color-scheme: dark)" content="#0f1518"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SoleSense"/>
 <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<script>
+  // Runs before the page paints, so a chosen theme doesn't flash the other one
+  try {
+    const theme = JSON.parse(localStorage.getItem('solesense.theme'));
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  } catch (e) {}
+</script>
 <style>
   :root {
     color-scheme: light dark;
@@ -37,7 +44,7 @@
     --radius-sm: 8px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg:        #0f1518;
       --surface:   #172024;
       --surface2:  #202b30;
@@ -56,6 +63,27 @@
       --foot-line:   #3b4b52;
       --shadow:    none;
     }
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:        #0f1518;
+    --surface:   #172024;
+    --surface2:  #202b30;
+    --border:    #2b383e;
+    --text:      #e8eef0;
+    --muted:     #97a7af;
+    --primary:   #3cc4bb;
+    --on-primary:#06201e;
+    --ok:        #4cc38a;
+    --warn:      #e8a73f;
+    --danger:    #f4736c;
+    --ok-soft:     rgba(76,195,138,0.12);
+    --warn-soft:   rgba(232,167,63,0.13);
+    --danger-soft: rgba(244,115,108,0.13);
+    --foot-fill:   #202b30;
+    --foot-line:   #3b4b52;
+    --shadow:    none;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -297,6 +325,7 @@
   .unit-toggle input { position: absolute; opacity: 0; pointer-events: none; }
   .unit-toggle input:checked + label { background: var(--primary); color: var(--on-primary); }
   .unit-toggle input:focus-visible + label { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .theme-toggle label { flex: 1; justify-content: center; min-height: 42px; }
   #weightError { color: var(--danger); font-size: 0.8rem; margin-top: 4px; }
   .limits-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
   .limits-table th { text-align: right; font-weight: 600; color: var(--muted); padding: 3px 0; }
@@ -567,6 +596,13 @@
       <tbody id="limitsBody"></tbody>
     </table>
 
+    <h3>Appearance</h3>
+    <div class="unit-toggle theme-toggle" role="radiogroup" aria-label="Theme">
+      <input type="radio" name="theme" id="themeSystem" value="system"/><label for="themeSystem">System</label>
+      <input type="radio" name="theme" id="themeLight" value="light"/><label for="themeLight">Light</label>
+      <input type="radio" name="theme" id="themeDark" value="dark"/><label for="themeDark">Dark</label>
+    </div>
+
     <h3>Background alerts</h3>
     <div class="setting-row">
       <span class="note" id="notifStatus"></span>
@@ -648,6 +684,9 @@ const MAX_SESSIONS       = 20;
 
 const PROFILE_KEY  = 'solesense.profile';
 const SESSIONS_KEY = 'solesense.sessions';
+const THEME_KEY    = 'solesense.theme';
+
+const THEME_COLORS = { light: '#f4f7f8', dark: '#0f1518' };
 
 // Same discharge curve as the firmware's BATT_CURVE table
 const BATT_CURVE = [
@@ -682,6 +721,7 @@ let renderQueued = false;
 
 let profile  = loadProfile();
 let sessions = loadJSON(SESSIONS_KEY, []);
+let theme    = loadTheme();
 let session  = null;
 let lastSessionSave = 0;
 
@@ -717,6 +757,11 @@ function loadProfile() {
     weightKg: weightKg >= MIN_WEIGHT_KG && weightKg <= MAX_WEIGHT_KG ? weightKg : null,
     unit: stored.unit === 'lb' ? 'lb' : 'kg',
   };
+}
+
+function loadTheme() {
+  const stored = loadJSON(THEME_KEY, 'system');
+  return stored === 'light' || stored === 'dark' ? stored : 'system';
 }
 
 // ── Personal limits ──────────────────────────────────────
@@ -1314,8 +1359,24 @@ function enableNotifications() {
   Notification.requestPermission().then(renderNotificationSetting);
 }
 
+function applyTheme() {
+  if (theme === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    meta.content = THEME_COLORS[theme === 'system' ? meta.dataset.scheme : theme];
+  });
+}
+
+// Applied straight away, like the other controls that don't wait for Save
+function changeTheme(e) {
+  theme = e.target.value;
+  saveJSON(THEME_KEY, theme);
+  applyTheme();
+}
+
 function openSettings() {
   document.getElementById(profile.unit === 'lb' ? 'unitLb' : 'unitKg').checked = true;
+  document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
   document.getElementById('weightInput').value = formatWeight(profile.weightKg, profile.unit);
   document.getElementById('weightError').hidden = true;
   renderLimits();
@@ -1543,6 +1604,7 @@ function stopDemo() {
 
 // ── Startup ───────────────────────────────────────────────
 window.addEventListener('load', () => {
+  applyTheme();
   buildZoneList();
   renderProfile();
   renderHistory();
@@ -1554,6 +1616,7 @@ window.addEventListener('load', () => {
 
   document.getElementById('settingsForm').addEventListener('submit', saveSettings);
   document.querySelectorAll('input[name="unit"]').forEach(el => el.addEventListener('change', convertWeightField));
+  document.querySelectorAll('input[name="theme"]').forEach(el => el.addEventListener('change', changeTheme));
 
   // Keeps the banner and session clock honest if data stops arriving
   setInterval(() => { if (mode === 'connected') render(); }, 1000);

@@ -349,7 +349,8 @@ HTML, CSS and JavaScript are all in `index.html`.
 
 ### Features
 
-- Live foot heatmap for a single foot, with light and dark themes that follow the device setting
+- Live foot heatmap for a single foot
+- System, Light and Dark themes, chosen in Settings and saved in the browser
 - Zone colours and bars scale from 0 to that zone's High limit, so they always agree with the Normal / Elevated / High tags
 - Temperature reading with status bands
 - Load balance: forefoot, arch and heel share of load over the last 60 seconds
